@@ -8,6 +8,7 @@ import "./styles/builder.css";
 import "./styles/meet.css";
 import "./styles/sim.css";
 import "./styles/end.css";
+import "./styles/explainer.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root element missing from index.html");

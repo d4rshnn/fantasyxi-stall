@@ -262,7 +262,17 @@ function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => vo
         />
       );
     case "explainer":
-      return <ExplainerScreen onPlayAgain={playAgain} />;
+      return (
+        <ExplainerScreen
+          ctx={ctx}
+          reveal={state.reveal}
+          locked={!!build.lockedTeam}
+          humanScore={state.outcome?.human ?? null}
+          dispatch={dispatch}
+          onLeaderboard={() => dispatch({ type: "GOTO", screen: "leaderboard" })}
+          onPlayAgain={playAgain}
+        />
+      );
     case "admin":
       return null; // rendered above
   }
