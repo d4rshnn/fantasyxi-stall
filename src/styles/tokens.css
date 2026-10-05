@@ -1,0 +1,65 @@
+/* Design tokens: the single place for colours, type, spacing, radii and timing.
+   Dark "broadcast" theme with ONE vivid accent. Use var(--token) everywhere else. */
+
+:root {
+  /* Surfaces (darkest -> lightest) */
+  --color-bg: #0b0f1a;
+  --color-surface: #141a2a;
+  --color-surface-raised: #1d2538;
+  --color-border: #2a3450;
+
+  /* Text */
+  --color-text: #f4f6fb;
+  --color-text-muted: #9aa5c0;
+  --color-text-on-accent: #0b0f1a;
+
+  /* The one accent, plus states */
+  --color-accent: #c8ff2e;
+  --color-accent-strong: #b2eb12;
+  --color-danger: #ff5a5f;
+  --color-warning: #ffb547;
+  --color-success: #3ddc97;
+
+  /* Pitch */
+  --color-pitch: #12462e;
+  --color-pitch-line: rgba(255, 255, 255, 0.18);
+
+  /* Typography */
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Condensed", "Inter", system-ui, sans-serif;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+  --text-hero: clamp(3rem, 9vw, 6.5rem);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Touch + motion */
+  --touch-min: 56px;
+  --duration-fast: 120ms;
+  --duration-base: 220ms; /* keep all transitions under 300ms */
+  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}
