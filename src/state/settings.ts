@@ -8,7 +8,10 @@ export function loadSettings(): Settings {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<Settings>;
-    return { timerEnabled: typeof parsed.timerEnabled === "boolean" ? parsed.timerEnabled : DEFAULT_SETTINGS.timerEnabled };
+    return {
+      timerEnabled: typeof parsed.timerEnabled === "boolean" ? parsed.timerEnabled : DEFAULT_SETTINGS.timerEnabled,
+      soundEnabled: typeof parsed.soundEnabled === "boolean" ? parsed.soundEnabled : DEFAULT_SETTINGS.soundEnabled,
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }

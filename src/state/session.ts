@@ -15,6 +15,8 @@ export interface SavedSession {
   lineup: Lineup;
   captainId: number;
   viceCaptainId: number;
+  /** The game id (leaderboard entry id) once assigned; lets a refresh after the replay skip a second save. */
+  gameId?: string;
 }
 
 export function readSession(): unknown {

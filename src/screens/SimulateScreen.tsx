@@ -57,7 +57,7 @@ export function SimulateScreen({ ctx, teamName, humanTeam, aiTeam, reveal, dispa
 
   // Store the final totals (the engine's) for the Result screen.
   useEffect(() => {
-    if (view.finished) dispatch({ type: "SIMULATION_FINISHED", outcome: replay.totals });
+    if (view.finished) dispatch({ type: "SIMULATION_FINISHED", outcome: replay.totals, finishedAt: Date.now() });
   }, [view.finished, replay, dispatch]);
 
   const names = { human: teamName, ai: "FantasyXI" };
@@ -97,7 +97,7 @@ export function SimulateScreen({ ctx, teamName, humanTeam, aiTeam, reveal, dispa
         {view.finished && (
           <div className="sim__final">
             <span className="sim__final-label">Final score</span>
-            <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "NEXT" })} autoFocus>
+            <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "GOTO", screen: "result" })} autoFocus>
               Continue
             </button>
           </div>

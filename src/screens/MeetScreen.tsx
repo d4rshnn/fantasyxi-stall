@@ -86,7 +86,7 @@ function MeetTeams({ ctx, teamName, humanTeam, aiTeam, dispatch }: Omit<Props, "
       </div>
       <footer className="builder-footer">
         <span className="builder-footer__hint">Same rules, same real results. Let's play the gameweek.</span>
-        <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "NEXT" })}>
+        <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "GOTO", screen: "simulate" })}>
           Play the gameweek
         </button>
       </footer>
