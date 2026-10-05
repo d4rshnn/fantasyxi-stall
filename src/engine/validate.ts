@@ -1,6 +1,6 @@
 // Legality checks with plain-language reasons, budget status, and "can this player go in this spot?".
 
-import { cheapestFill, rankInClubGroup } from "./budget";
+import { candidateFill, cheapestFill } from "./budget";
 import { clubName, formatPrice, formationName, isValidXICounts, POSITION_NAMES, zeroCounts, type PositionCounts } from "./rules";
 import { squadOf } from "./team";
 import { POSITIONS, type EngineContext, type Lineup, type Player, type Team } from "./types";
@@ -232,25 +232,16 @@ export function slotChecker(lineup: Lineup, slotIndex: number, ctx: EngineContex
   if (!slot) throw new Error(`No slot ${slotIndex}`);
   const s = lineupState(lineup, ctx, slotIndex);
   const remaining = ctx.rules.budget - s.spent;
-  const perClub = new Map<number, number | null>();
+  const needsAfter = { ...s.needs, [slot.position]: s.needs[slot.position] - 1 };
+  let fillFor: ((p: Player) => number | null) | null = null; // built on first use
 
   return (playerId) => {
     const pl = ctx.players.get(playerId);
     const basic = basicCheck(pl, slot.position, s, ctx);
     if (basic) return basic;
     if (pl!.price > remaining) return budgetCheck(pl!, remaining, 0, s.emptyCount - 1, ctx);
-    const { needs, clubCounts } = withPlayer(s, pl!, slot.position);
-    // cheapestFill only ever uses the first min(need, allowance) available players of a club+position.
-    // If this player ranks beyond that, leaving them "available" can't change the answer, so share it.
-    const usable = Math.min(needs[pl!.position], ctx.rules.max_per_club - (clubCounts.get(pl!.team_id) ?? 0));
-    let fill: number | null;
-    if (rankInClubGroup(ctx, pl!, s.taken) >= usable) {
-      if (!perClub.has(pl!.team_id)) perClub.set(pl!.team_id, cheapestFill(ctx, { needs, taken: s.taken, clubCounts }));
-      fill = perClub.get(pl!.team_id)!;
-    } else {
-      fill = cheapestFill(ctx, { needs, taken: s.taken, clubCounts, exclude: pl!.id });
-    }
-    return budgetCheck(pl!, remaining, fill, s.emptyCount - 1, ctx);
+    fillFor ??= candidateFill(ctx, { needs: needsAfter, taken: s.taken, clubCounts: s.clubCounts });
+    return budgetCheck(pl!, remaining, fillFor(pl!), s.emptyCount - 1, ctx);
   };
 }
 

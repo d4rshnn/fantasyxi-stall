@@ -5,7 +5,7 @@ export function MeetScreen({ onNext }: { onNext: () => void }) {
     <PlaceholderScreen
       eyebrow="The challenger"
       title="Meet FantasyXI"
-      body="The AI team appears beside yours. reveal.json loads only after the lock (S5)."
+      body="The AI team appears beside yours (S5)."
       nextLabel="Play the gameweek"
       onNext={onNext}
     />

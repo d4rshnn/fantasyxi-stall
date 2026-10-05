@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState, type Dispatch } from "react";
 import { DevScreenStrip } from "./components/DevScreenStrip";
+import { TimeUpDialog } from "./components/TimeUpDialog";
 import { DataLoadError, loadInitialData } from "./data/loader";
-import type { InitialData } from "./data/types";
-import { initialState, reducer, type AppState, type FlowScreen } from "./state/machine";
+import { initialState, reducer, TIMED_SCREENS, type Action, type AppState, type FlowScreen } from "./state/machine";
+import { loadSettings, saveSettings } from "./state/settings";
 import { AdminScreen } from "./screens/AdminScreen";
 import { AttractScreen } from "./screens/AttractScreen";
 import { BenchScreen } from "./screens/BenchScreen";
@@ -19,9 +20,19 @@ import { LoadErrorScreen, LoadingScreen } from "./screens/StatusScreens";
 
 const ADMIN_HASH = "#/admin";
 
+/** Dev-only: `?timer=15` shortens the countdown to 15 s for testing. Ignored in production builds. */
+function devTimerMs(): number | undefined {
+  if (!import.meta.env.DEV) return undefined;
+  const s = Number(new URLSearchParams(window.location.search).get("timer"));
+  return Number.isFinite(s) && s > 0 ? s * 1000 : undefined;
+}
+
 export function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, initialState, (s) => ({ ...s, settings: loadSettings() }));
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [timerMs] = useState(devTimerMs);
+
+  useEffect(() => saveSettings(state.settings), [state.settings]);
 
   // Load manifest + pre-game data (never reveal.json) on start and on "Try again".
   useEffect(() => {
@@ -52,8 +63,7 @@ export function App() {
   };
 
   useEffect(() => {
-    const syncHash = () =>
-      dispatch({ type: window.location.hash === ADMIN_HASH ? "OPEN_ADMIN" : "CLOSE_ADMIN" });
+    const syncHash = () => dispatch({ type: window.location.hash === ADMIN_HASH ? "OPEN_ADMIN" : "CLOSE_ADMIN" });
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
         e.preventDefault();
@@ -69,7 +79,7 @@ export function App() {
     };
   }, [openAdmin]);
 
-  const next = () => dispatch({ type: "NEXT" });
+  const showTimeUp = state.screen !== "admin" && TIMED_SCREENS.includes(state.screen) && state.build?.timer.dialog;
 
   return (
     <div className="app">
@@ -85,6 +95,8 @@ export function App() {
       )}
       {state.screen === "admin" ? (
         <AdminScreen
+          timerEnabled={state.settings.timerEnabled}
+          onTimerEnabled={(enabled) => dispatch({ type: "SET_TIMER_ENABLED", enabled })}
           onClose={() => {
             clearAdminHash();
             dispatch({ type: "CLOSE_ADMIN" });
@@ -95,16 +107,20 @@ export function App() {
           }}
         />
       ) : (
-        renderMain(state, next, () => setLoadAttempt((n) => n + 1))
+        renderMain(state, dispatch, () => setLoadAttempt((n) => n + 1), timerMs)
       )}
+      {showTimeUp && state.build && <TimeUpDialog build={state.build} dispatch={dispatch} />}
     </div>
   );
 }
 
-function renderMain(state: AppState, next: () => void, retry: () => void) {
-  if (state.data.status === "loading") return <LoadingScreen />;
+function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => void, timerMs: number | undefined) {
+  if (state.data.status === "loading" || (state.data.status === "ready" && !state.build)) return <LoadingScreen />;
   if (state.data.status === "error") return <LoadErrorScreen message={state.data.message} onRetry={retry} />;
-  const data: InitialData = state.data.data;
+  const { data, ctx } = state.data;
+  const build = state.build!;
+  const next = () => dispatch({ type: "NEXT" });
+  const buildProps = { build, ctx, dispatch, timerEnabled: state.settings.timerEnabled, timerMs };
 
   switch (state.screen) {
     case "attract":
@@ -112,13 +128,13 @@ function renderMain(state: AppState, next: () => void, retry: () => void) {
     case "name":
       return <NameScreen onNext={next} />;
     case "build":
-      return <BuildScreen onNext={next} />;
+      return <BuildScreen {...buildProps} />;
     case "bench":
-      return <BenchScreen onNext={next} />;
+      return <BenchScreen {...buildProps} />;
     case "captain":
-      return <CaptainScreen onNext={next} />;
+      return <CaptainScreen {...buildProps} />;
     case "lock":
-      return <LockScreen onNext={next} />;
+      return <LockScreen build={build} ctx={ctx} dispatch={dispatch} />;
     case "meet":
       return <MeetScreen onNext={next} />;
     case "simulate":

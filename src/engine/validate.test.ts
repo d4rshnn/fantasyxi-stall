@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cheapestFill } from "./budget";
+import { candidateFill, cheapestFill } from "./budget";
 import { benchPositions, emptyLineup, FORMATIONS, formationCounts, isValidFormation } from "./rules";
 import { teamFromAi } from "./team";
 import { pick, randomLegalPartialLineup, realGameweek, rng, shuffle, syntheticContext } from "./testing/fixtures";
@@ -145,6 +145,33 @@ describe("cheapestFill (the reserve) is exact and respects the club limit", () =
       const clubCounts = new Map([[1, Math.floor(r() * 4)], [2, Math.floor(r() * 3)]]);
       expect(cheapestFill(ctx, { needs, taken: new Set(), clubCounts })).toBe(bruteForce(spec, needs, clubCounts, ctx.rules.max_per_club));
     }
+  });
+});
+
+describe("candidateFill (fast picker version) gives exactly the same answers", () => {
+  it("matches cheapestFill and brute force for every candidate in 300 small random leagues", () => {
+    const r = rng(11);
+    let checked = 0;
+    for (let t = 0; t < 300; t++) {
+      const spec: [number, Position, number, number][] = [];
+      let id = 1;
+      for (const pos of POSITIONS) for (let k = 0; k < 5; k++) spec.push([id++, pos, 1 + Math.floor(r() * 3), 40 + Math.floor(r() * 30)]);
+      const ctx = syntheticContext(spec);
+      const needs = { GK: Math.floor(r() * 2), DEF: Math.floor(r() * 3), MID: Math.floor(r() * 3), FWD: Math.floor(r() * 2) };
+      const clubCounts = new Map([[1, Math.floor(r() * 3)], [2, Math.floor(r() * 3)], [3, Math.floor(r() * 2)]]);
+      const taken = new Set(spec.filter(() => r() < 0.15).map(([pid]) => pid));
+      const fast = candidateFill(ctx, { needs, taken, clubCounts });
+      for (const [pid, , club] of spec) {
+        if (taken.has(pid) || (clubCounts.get(club) ?? 0) >= ctx.rules.max_per_club) continue;
+        const cc = new Map(clubCounts).set(club, (clubCounts.get(club) ?? 0) + 1);
+        const exact = cheapestFill(ctx, { needs, taken, clubCounts: cc, exclude: pid });
+        expect(fast(ctx.players.get(pid)!), `league ${t}, player ${pid}`).toBe(exact);
+        const rest = spec.filter(([x]) => x !== pid && !taken.has(x));
+        expect(exact).toBe(bruteForce(rest, needs, cc, ctx.rules.max_per_club));
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(3000);
   });
 });
 
