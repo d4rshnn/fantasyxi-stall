@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "data_version": "ca2bdf0cdef4",
+  "season": "2025-26",
+  "default_gameweek": 37,
+  "gameweeks": [
+    {
+      "gameweek": 37,
+      "label": "Gameweek 37 · 2025-26",
+      "role": "challenge",
+      "pregame": "gw37/pregame.json",
+      "reveal": "gw37/reveal.json",
+      "ai_target_score": 98
+    },
+    {
+      "gameweek": 38,
+      "label": "Gameweek 38 · 2025-26",
+      "role": "spare",
+      "pregame": "gw38/pregame.json",
+      "reveal": "gw38/reveal.json",
+      "ai_target_score": 63
+    }
+  ]
+}
