@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { manifest, realGameweek } from "../engine/testing/fixtures";
+import { aiBuild } from "./testing";
 import { FLOW, initialState, reducer, type AppState } from "./machine";
 
 function loaded(): AppState {
@@ -9,17 +10,16 @@ function loaded(): AppState {
 }
 
 describe("screen state machine", () => {
-  it("walks the whole flow with Next and wraps back to a fresh game", () => {
-    let state: AppState = { ...loaded(), teamName: "The Overfitters" };
-    state = reducer(state, { type: "PLACE_PLAYER", slotIndex: 0, playerId: realGameweek(37).ctx.byPosition.GK[0]!.id });
-    expect(state.build!.lineup.slots[0]!.playerId).not.toBeNull();
+  it("walks the whole flow (Next, and LOCK on the lock screen) and wraps back to a fresh game", () => {
+    let state: AppState = { ...loaded(), teamName: "The Overfitters", build: aiBuild() };
     const visited: string[] = [state.screen];
     for (let i = 0; i < FLOW.length; i++) {
-      state = reducer(state, { type: "NEXT" });
+      state = reducer(state, { type: state.screen === "lock" ? "LOCK" : "NEXT" });
       visited.push(state.screen);
     }
     expect(visited).toEqual([...FLOW, "attract"]);
     expect(state.teamName).toBe("");
+    expect(state.build!.lockedTeam).toBeNull();
     expect(state.build!.lineup.slots.every((s) => s.playerId === null)).toBe(true);
   });
 

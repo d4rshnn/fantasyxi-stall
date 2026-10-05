@@ -4,7 +4,8 @@ import { SlotCard } from "./PlayerCard";
 interface Props {
   lineup: Lineup;
   ctx: EngineContext;
-  onSlot: (slotIndex: number) => void;
+  /** Omit for a read-only pitch (nothing can be tapped). */
+  onSlot?: (slotIndex: number) => void;
   captainId?: number | null;
   viceCaptainId?: number | null;
   /** If given, only these slots can be tapped (others look normal but do nothing). */
@@ -16,9 +17,9 @@ interface Props {
 const ROWS: Position[] = ["FWD", "MID", "DEF", "GK"]; // attack at the top, keeper at the bottom
 
 /** The starting XI on a pitch. Tap an empty spot to add a player, a filled one to change it. */
-export function Pitch({ lineup, ctx, onSlot, captainId, viceCaptainId, canTap, activeSlot }: Props) {
+export function Pitch({ lineup, ctx, onSlot, captainId, viceCaptainId, canTap, activeSlot, label = "Starting XI" }: Props & { label?: string }) {
   return (
-    <div className="pitch" aria-label="Starting XI">
+    <div className={`pitch ${onSlot ? "" : "pitch--static"}`} aria-label={label}>
       {ROWS.map((pos) => (
         <div className="pitch__row" key={pos}>
           {lineup.slots.map((slot, i) =>
@@ -45,7 +46,8 @@ interface SlotButtonProps {
   lineup: Lineup;
   index: number;
   ctx: EngineContext;
-  onSlot: (slotIndex: number) => void;
+  /** Omit for a read-only spot. */
+  onSlot?: (slotIndex: number) => void;
   badge?: "C" | "V" | null;
   disabled?: boolean;
   active?: boolean;
@@ -56,6 +58,14 @@ export function SlotButton({ lineup, index, ctx, onSlot, badge, disabled, active
   const slot = lineup.slots[index]!;
   const player = slot.playerId !== null ? ctx.players.get(slot.playerId) : undefined;
   const posName = POSITION_NAMES[slot.position].one;
+  if (!onSlot) {
+    // Read-only (locked team, FantasyXI's team): plain element, nothing to click.
+    return (
+      <div className={`slot slot--static ${player ? "slot--filled" : "slot--empty"}`} data-slot={index}>
+        {player ? <SlotCard player={player} ctx={ctx} badge={badge} /> : <span className="slot__pos">{slot.position}</span>}
+      </div>
+    );
+  }
   return (
     <button
       type="button"
@@ -74,5 +84,20 @@ export function SlotButton({ lineup, index, ctx, onSlot, badge, disabled, active
         </span>
       )}
     </button>
+  );
+}
+
+/** Read-only bench in auto-sub order (1 = first substitute). */
+export function BenchStrip({ lineup, ctx }: { lineup: Lineup; ctx: EngineContext }) {
+  const bench = lineup.slots.flatMap((s, i) => (s.kind === "bench" ? [i] : []));
+  return (
+    <ol className="bench-strip" aria-label="Bench, in substitution order">
+      {bench.map((slotIndex, k) => (
+        <li key={slotIndex} className="bench-strip__item">
+          <span className="bench-strip__order">{k + 1}</span>
+          <SlotButton lineup={lineup} index={slotIndex} ctx={ctx} />
+        </li>
+      ))}
+    </ol>
   );
 }

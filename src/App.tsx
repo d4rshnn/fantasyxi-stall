@@ -17,6 +17,9 @@ import { NameScreen } from "./screens/NameScreen";
 import { ResultScreen } from "./screens/ResultScreen";
 import { SimulateScreen } from "./screens/SimulateScreen";
 import { LoadErrorScreen, LoadingScreen } from "./screens/StatusScreens";
+import { PlaceholderScreen } from "./components/PlaceholderScreen";
+import { fetchRevealFor } from "./state/reveal";
+import { clearSession, readSession, writeSession } from "./state/session";
 
 const ADMIN_HASH = "#/admin";
 
@@ -31,15 +34,56 @@ export function App() {
   const [state, dispatch] = useReducer(reducer, initialState, (s) => ({ ...s, settings: loadSettings() }));
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [timerMs] = useState(devTimerMs);
+  // A team locked before a page refresh (sessionStorage); restored once the data has loaded.
+  const [savedSession] = useState(readSession);
 
   useEffect(() => saveSettings(state.settings), [state.settings]);
+
+  // Keep the locked team in sessionStorage so an accidental refresh doesn't lose it; forget it for a new game.
+  const lockedTeam = state.build?.lockedTeam ?? null;
+  useEffect(() => {
+    if (state.data.status !== "ready" || !state.build) return;
+    const { lineup, captainId, viceCaptainId } = state.build;
+    if (lockedTeam && captainId !== null && viceCaptainId !== null) {
+      writeSession({
+        v: 1,
+        dataVersion: state.data.data.manifest.data_version,
+        gameweek: state.data.data.gameweek.gameweek,
+        teamName: state.teamName,
+        lineup,
+        captainId,
+        viceCaptainId,
+      });
+    } else if (!lockedTeam) {
+      clearSession();
+    }
+  }, [lockedTeam, state.data, state.build, state.teamName]);
+
+  // Spoiler guard (not security): reveal.json is fetched only when the reducer has moved to "loading",
+  // which it only does for a locked team. Results are ignored if a newer attempt has started.
+  const revealAttempt = state.reveal.status === "loading" ? state.reveal.attempt : null;
+  useEffect(() => {
+    if (revealAttempt === null || state.data.status !== "ready") return;
+    let cancelled = false;
+    fetchRevealFor(state.data.data.gameweek, state.data.ctx).then((r) => {
+      if (cancelled) return;
+      dispatch(
+        r.ok
+          ? { type: "REVEAL_LOADED", attempt: revealAttempt, reveal: r.reveal, aiTeam: r.aiTeam }
+          : { type: "REVEAL_FAILED", attempt: revealAttempt, message: r.message },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [revealAttempt, state.data]);
 
   // Load manifest + pre-game data (never reveal.json) on start and on "Try again".
   useEffect(() => {
     let cancelled = false;
     dispatch({ type: "DATA_LOADING" });
     loadInitialData()
-      .then((data) => !cancelled && dispatch({ type: "DATA_LOADED", data }))
+      .then((data) => !cancelled && dispatch({ type: "DATA_LOADED", data, saved: savedSession }))
       .catch((err: unknown) => {
         if (cancelled) return;
         const message = err instanceof DataLoadError ? err.message : "Unexpected error while loading.";
@@ -126,7 +170,7 @@ function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => vo
     case "attract":
       return <AttractScreen data={data} onNext={next} />;
     case "name":
-      return <NameScreen onNext={next} />;
+      return <NameScreen teamName={state.teamName} dispatch={dispatch} />;
     case "build":
       return <BuildScreen {...buildProps} />;
     case "bench":
@@ -134,9 +178,13 @@ function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => vo
     case "captain":
       return <CaptainScreen {...buildProps} />;
     case "lock":
-      return <LockScreen build={build} ctx={ctx} dispatch={dispatch} />;
+      return <LockScreen build={build} ctx={ctx} teamName={state.teamName} dispatch={dispatch} />;
     case "meet":
-      return <MeetScreen onNext={next} />;
+      if (!build.lockedTeam) {
+        // Only reachable before locking via the dev strip; nothing is revealed until the lock.
+        return <PlaceholderScreen eyebrow="Not yet" title="Lock your team first" body="FantasyXI's team appears after you lock yours." />;
+      }
+      return <MeetScreen ctx={ctx} teamName={state.teamName} humanTeam={build.lockedTeam} reveal={state.reveal} dispatch={dispatch} />;
     case "simulate":
       return <SimulateScreen onNext={next} />;
     case "result":

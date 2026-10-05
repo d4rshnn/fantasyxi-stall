@@ -1,0 +1,319 @@
+/* Name screen, lock summary, "thinking" state, the dramatic beat, and the two-team Meet view. */
+
+/* ---- Name ---- */
+.name-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  width: min(720px, 100%);
+}
+
+.input--big {
+  flex: 1 1 320px;
+  min-height: var(--touch-min);
+  font-size: var(--text-xl);
+  text-align: center;
+}
+
+.dice {
+  min-width: var(--touch-min);
+  font-size: 1.8rem;
+  padding: 0 var(--space-3);
+}
+
+/* ---- Lock summary (inside the dialog) ---- */
+.lock-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.lock-summary__lead {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.lock-summary__xi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.lock-summary__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.lock-summary__pos {
+  width: 3.5rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  text-transform: uppercase;
+}
+
+.lock-summary__player {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.cv-inline {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.cv-inline--C {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.cv-inline--V {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.dialog {
+  max-height: calc(100vh - 2 * var(--space-4));
+  overflow-y: auto;
+}
+
+/* ---- Read-only slots ---- */
+.slot--static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+/* ---- Thinking ---- */
+.thinking {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.thinking span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: pulse 900ms ease-in-out infinite;
+}
+
+.thinking span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.thinking span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+}
+
+/* ---- The beat ---- */
+.beat {
+  cursor: pointer;
+}
+
+.beat__title {
+  color: var(--color-accent);
+  animation: beat-in 260ms ease-out;
+}
+
+@keyframes beat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking span,
+  .beat__title {
+    animation: none;
+  }
+}
+
+/* ---- Meet: two teams ---- */
+.meet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.meet__title {
+  font-size: var(--text-2xl);
+  text-align: center;
+}
+
+.meet__vs {
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+}
+
+.meet__ai {
+  color: var(--color-accent);
+}
+
+.versus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.team-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.team-panel--ai {
+  border-color: var(--color-accent);
+}
+
+.team-panel__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.team-panel__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.team-panel__title {
+  flex: 1;
+  font-size: var(--text-xl);
+}
+
+.team-panel__formation {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--color-accent);
+}
+
+.versus .slot {
+  width: clamp(64px, 8.4vw, 116px);
+  min-height: 92px;
+}
+
+.bench-strip {
+  display: flex;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.bench-strip__item {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.bench-strip__item .slot {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 84px;
+}
+
+/* Substitution order as a small corner badge (keeps the names readable on phones). */
+.bench-strip__order {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .versus {
+    grid-template-columns: 1fr;
+  }
+
+  .versus .slot {
+    width: clamp(64px, 17vw, 116px);
+  }
+}
+
+@media (max-width: 640px) {
+  .meet {
+    padding: var(--space-2);
+  }
+
+  .meet__title {
+    font-size: var(--text-xl);
+  }
+
+  .team-panel {
+    padding: var(--space-2);
+  }
+
+  .versus .pitch .slot-card__name--wide,
+  .bench-strip .slot-card__name--wide {
+    display: none;
+  }
+
+  .versus .pitch .slot-card__name--narrow,
+  .bench-strip .slot-card__name--narrow {
+    display: block;
+  }
+
+  .bench-strip {
+    gap: var(--space-1);
+    padding: var(--space-1);
+  }
+
+  .versus .cv-badge {
+    top: -4px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.75rem;
+  }
+
+  .bench-strip__item .slot {
+    min-height: 76px;
+  }
+}

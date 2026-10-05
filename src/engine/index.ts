@@ -15,7 +15,7 @@ export {
   makeContext,
   type PositionCounts,
 } from "./rules";
-export { lineupToTeam, squadOf, teamFromAi } from "./team";
+export { lineupToTeam, squadOf, teamFromAi, teamToLineup } from "./team";
 export {
   budgetStatus,
   canAddPlayer,
