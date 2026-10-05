@@ -39,3 +39,17 @@ export {
   type FillResult,
 } from "./autofill";
 export { resultsById, scoreTeam, type ResultLookup, type ScoredPlayer, type ScoreResult } from "./score";
+export { explainPoints, isBigMoment, type PointEventKind, type PointItem, type PointsExplanation } from "./points";
+export {
+  SIDES,
+  assertReplayTotals,
+  buildReplay,
+  fixtureEndIndexes,
+  type Pair,
+  type PlayerInTeam,
+  type Replay,
+  type ReplayFixture,
+  type ReplayInput,
+  type ReplayStep,
+  type Side,
+} from "./replay";

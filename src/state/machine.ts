@@ -53,6 +53,14 @@ export interface AppState {
   build: BuildState | null;
   /** FantasyXI's team + real results; only ever requested after the lock (spoiler guard). */
   reveal: RevealState;
+  /** Final totals once the gameweek replay has finished (or was skipped). Read by the Result screen. */
+  outcome: Outcome | null;
+}
+
+/** Both final scores, straight from the scoring engine (the replay ends on exactly these). */
+export interface Outcome {
+  human: number;
+  ai: number;
 }
 
 export type AppAction =
@@ -69,7 +77,8 @@ export type AppAction =
   | { type: "SET_TEAM_NAME"; name: string }
   | { type: "REVEAL_REQUEST" }
   | { type: "REVEAL_LOADED"; attempt: number; reveal: Reveal; aiTeam: Team }
-  | { type: "REVEAL_FAILED"; attempt: number; message: string };
+  | { type: "REVEAL_FAILED"; attempt: number; message: string }
+  | { type: "SIMULATION_FINISHED"; outcome: Outcome };
 
 export type Action = AppAction | BuildAction;
 
@@ -81,6 +90,7 @@ export const initialState: AppState = {
   teamName: "",
   build: null,
   reveal: REVEAL_IDLE,
+  outcome: null,
 };
 
 export const isLocked = (state: AppState): boolean => !!state.build?.lockedTeam;
@@ -95,7 +105,7 @@ const ctxOf = (state: AppState): EngineContext | null => (state.data.status === 
 /** A fresh game for the next group (keeps data and operator settings). */
 function newGame(state: AppState): AppState {
   const ctx = ctxOf(state);
-  return { ...state, teamName: "", build: ctx ? newBuild(ctx) : null, reveal: REVEAL_IDLE };
+  return { ...state, teamName: "", build: ctx ? newBuild(ctx) : null, reveal: REVEAL_IDLE, outcome: null };
 }
 
 export function reducer(state: AppState, action: Action): AppState {
@@ -128,6 +138,10 @@ export function reducer(state: AppState, action: Action): AppState {
     case "REVEAL_LOADED":
       if (!isLocked(state) || state.reveal.status !== "loading" || state.reveal.attempt !== action.attempt) return state;
       return { ...state, reveal: { status: "ready", reveal: action.reveal, aiTeam: action.aiTeam } };
+    case "SIMULATION_FINISHED":
+      // Only meaningful for a locked team whose reveal data is loaded; the first result sticks.
+      if (!isLocked(state) || state.reveal.status !== "ready" || state.outcome) return state;
+      return { ...state, outcome: action.outcome };
     case "REVEAL_FAILED":
       if (state.reveal.status !== "loading" || state.reveal.attempt !== action.attempt) return state;
       return { ...state, reveal: { status: "error", message: action.message, attempt: action.attempt } };

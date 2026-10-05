@@ -186,9 +186,21 @@ function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => vo
       }
       return <MeetScreen ctx={ctx} teamName={state.teamName} humanTeam={build.lockedTeam} reveal={state.reveal} dispatch={dispatch} />;
     case "simulate":
-      return <SimulateScreen onNext={next} />;
+      if (!build.lockedTeam || state.reveal.status !== "ready") {
+        return <PlaceholderScreen eyebrow="Not yet" title="Meet FantasyXI first" body="Lock your team and load FantasyXI's team before the gameweek." />;
+      }
+      return (
+        <SimulateScreen
+          ctx={ctx}
+          teamName={state.teamName}
+          humanTeam={build.lockedTeam}
+          aiTeam={state.reveal.aiTeam}
+          reveal={state.reveal.reveal}
+          dispatch={dispatch}
+        />
+      );
     case "result":
-      return <ResultScreen onNext={next} />;
+      return <ResultScreen teamName={state.teamName} outcome={state.outcome} onNext={next} />;
     case "leaderboard":
       return <LeaderboardScreen onNext={next} />;
     case "explainer":

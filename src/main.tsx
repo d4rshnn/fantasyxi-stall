@@ -6,6 +6,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/builder.css";
 import "./styles/meet.css";
+import "./styles/sim.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root element missing from index.html");
