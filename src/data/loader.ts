@@ -1,9 +1,8 @@
-import type { InitialData, Manifest, Pregame } from "./types";
+import { DataShapeError, parseManifest, parsePregame, parseReveal, type ManifestGameweek, type Reveal } from "../engine";
+import type { InitialData } from "./types";
 
 // Relative to the page (vite base is "./"), so this works on GitHub Pages and any local server.
 const DATA_BASE = `${import.meta.env.BASE_URL}data/`;
-
-const SUPPORTED_SCHEMA = 1;
 
 export class DataLoadError extends Error {}
 
@@ -22,31 +21,30 @@ async function fetchJson(path: string): Promise<unknown> {
   }
 }
 
-function isObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null;
-}
-
-function checkSchema(file: string, v: unknown): void {
-  if (!isObject(v) || v.schema_version !== SUPPORTED_SCHEMA) {
-    throw new DataLoadError(`${file} has an unexpected format.`);
+/** Runs a parser and turns shape errors into DataLoadError (shown on the error screen). */
+function parseOrFail<T>(parse: () => T): T {
+  try {
+    return parse();
+  } catch (err) {
+    if (err instanceof DataShapeError) throw new DataLoadError(err.message);
+    throw err;
   }
 }
 
 /** Loads the manifest and the default gameweek's pre-game data. Never loads reveal.json. */
 export async function loadInitialData(): Promise<InitialData> {
-  const manifestRaw = await fetchJson("manifest.json");
-  checkSchema("manifest.json", manifestRaw);
-  const manifest = manifestRaw as Manifest;
-
-  const gameweek = manifest.gameweeks.find((g) => g.gameweek === manifest.default_gameweek);
-  if (!gameweek) throw new DataLoadError("The default gameweek is missing from manifest.json.");
-
-  const pregameRaw = await fetchJson(gameweek.pregame);
-  checkSchema(gameweek.pregame, pregameRaw);
-  const pregame = pregameRaw as Pregame;
-  if (!Array.isArray(pregame.players) || pregame.players.length === 0) {
-    throw new DataLoadError(`${gameweek.pregame} has no players.`);
-  }
-
+  const manifestJson = await fetchJson("manifest.json");
+  const manifest = parseOrFail(() => parseManifest(manifestJson, "manifest.json"));
+  // parseManifest guarantees default_gameweek is listed.
+  const gameweek = manifest.gameweeks.find((g) => g.gameweek === manifest.default_gameweek)!;
+  const pregameJson = await fetchJson(gameweek.pregame);
+  const pregame = parseOrFail(() => parsePregame(pregameJson, gameweek.pregame));
   return { manifest, gameweek, pregame };
+}
+
+/** Loads the results/AI team for a gameweek. Call ONLY after the team is locked
+ *  (spoiler guard for normal play, not security: the file is public). */
+export async function loadReveal(gameweek: ManifestGameweek): Promise<Reveal> {
+  const json = await fetchJson(gameweek.reveal);
+  return parseOrFail(() => parseReveal(json, gameweek.reveal));
 }
