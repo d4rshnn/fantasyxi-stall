@@ -4,6 +4,8 @@ import { BuilderHeader } from "../components/BuilderHeader";
 import { Dialog } from "../components/Dialog";
 import { Pitch, SlotButton } from "../components/Pitch";
 import { PlayerMarket } from "../components/PlayerMarket";
+import { DiceIcon } from "../components/DiceIcon";
+import { newSeed } from "../state/randomTeam";
 import { filledCount, slotCount, type BuildState } from "../state/build";
 import type { Action } from "../state/machine";
 
@@ -32,19 +34,31 @@ export function BuildScreen({ build, ctx, dispatch, timerEnabled, timerMs }: Bui
     <main className="builder">
       <BuilderHeader step="build" build={build} ctx={ctx} dispatch={dispatch} timerEnabled={timerEnabled} timerMs={timerMs} />
 
-      <div className="formations" role="radiogroup" aria-label="Formation">
-        {FORMATIONS.map((f) => (
+      <div className="formation-bar">
+        <div className="formations" role="radiogroup" aria-label="Formation">
+          {FORMATIONS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="radio"
+              aria-checked={lineup.formation === f}
+              className={`chip ${lineup.formation === f ? "chip--on" : ""}`}
+              onClick={() => dispatch({ type: "SET_FORMATION", formation: f })}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        {left > 0 && (
           <button
-            key={f}
             type="button"
-            role="radio"
-            aria-checked={lineup.formation === f}
-            className={`chip ${lineup.formation === f ? "chip--on" : ""}`}
-            onClick={() => dispatch({ type: "SET_FORMATION", formation: f })}
+            className="btn btn--ghost btn--small btn--dice"
+            onClick={() => dispatch({ type: "RANDOM_XI", seed: newSeed() })}
+            title="Fills your empty spots with random players you can afford (not AI picks). Undo takes it back."
           >
-            {f}
+            <DiceIcon /> Random team
           </button>
-        ))}
+        )}
       </div>
 
       <Pitch lineup={lineup} ctx={ctx} onSlot={setPicker} activeSlot={picker} />

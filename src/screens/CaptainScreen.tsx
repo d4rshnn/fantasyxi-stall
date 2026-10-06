@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { BuilderHeader } from "../components/BuilderHeader";
 import { Pitch } from "../components/Pitch";
+import { DiceIcon } from "../components/DiceIcon";
+import { newSeed } from "../state/randomTeam";
 import type { BuildScreenProps } from "./BuildScreen";
 
 export function CaptainScreen({ build, ctx, dispatch, timerEnabled, timerMs }: BuildScreenProps) {
@@ -33,6 +35,17 @@ export function CaptainScreen({ build, ctx, dispatch, timerEnabled, timerMs }: B
             Vice (V): {name(viceCaptainId)}
           </button>
         </div>
+        <button
+          type="button"
+          className="btn btn--ghost btn--small btn--dice"
+          onClick={() => {
+            dispatch({ type: "RANDOM_CAPTAIN", seed: newSeed() });
+            setMode("V");
+          }}
+          title="Picks a random starter as captain and a different one as vice (not AI picks). Undo takes it back."
+        >
+          <DiceIcon /> Random captain
+        </button>
         <p className="hint hint--strong">Tap a player to make them {mode === "C" ? "captain" : "vice-captain"}.</p>
       </div>
 
@@ -41,6 +54,9 @@ export function CaptainScreen({ build, ctx, dispatch, timerEnabled, timerMs }: B
       <footer className="builder-footer">
         <button type="button" className="btn btn--ghost btn--small" onClick={() => dispatch({ type: "GOTO", screen: "bench" })}>
           Back
+        </button>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => dispatch({ type: "UNDO" })} disabled={build.undo.length === 0}>
+          Undo
         </button>
         <span className="builder-footer__hint">{captainId === null ? "Pick a captain" : viceCaptainId === null ? "Pick a vice-captain" : "Ready to lock"}</span>
         <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "GOTO", screen: "lock" })} disabled={captainId === null || viceCaptainId === null}>

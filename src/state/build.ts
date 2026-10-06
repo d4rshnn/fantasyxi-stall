@@ -15,6 +15,7 @@ import {
   type Position,
   type Team,
 } from "../engine";
+import { randomCaptainVice, randomFillXI, seededRng } from "./randomTeam";
 
 export const DEFAULT_FORMATION = "4-4-2";
 export const TIMER_MS = 3 * 60_000;
@@ -51,6 +52,9 @@ export type BuildAction =
   | { type: "UNDO" }
   | { type: "START_OVER" }
   | { type: "AUTO_FILL_BENCH" }
+  /** Random helpers: the seed comes from the button (Math.random), so this reducer stays deterministic. */
+  | { type: "RANDOM_XI"; seed: number }
+  | { type: "RANDOM_CAPTAIN"; seed: number }
   | { type: "MOVE_BENCH"; from: number; to: number }
   | { type: "SET_CAPTAIN"; playerId: number }
   | { type: "SET_VICE"; playerId: number }
@@ -154,6 +158,17 @@ export function buildReducer(s: BuildState, a: BuildAction, ctx: EngineContext):
       if (!res.ok) return refuse(s, res.reason);
       if (res.lineup === s.lineup) return s;
       return commit(s, { lineup: res.lineup });
+    }
+    case "RANDOM_XI": {
+      if (!s.lineup.slots.some((x) => x.kind === "xi" && x.playerId === null)) return s;
+      const lineup = randomFillXI(s.lineup, ctx, seededRng(a.seed));
+      if (!lineup) return refuse(s, "Couldn't pick a random team from here. Remove a player or two and try again.");
+      return commit(s, { lineup }); // one Undo step for the whole fill
+    }
+    case "RANDOM_CAPTAIN": {
+      const cv = randomCaptainVice(s.lineup, seededRng(a.seed));
+      if (!cv) return refuse(s, "Pick at least two starters first.");
+      return commit(s, { captainId: cv[0], viceCaptainId: cv[1] });
     }
     case "MOVE_BENCH": {
       const bench = s.lineup.slots.flatMap((x, i) => (x.kind === "bench" ? [i] : []));
