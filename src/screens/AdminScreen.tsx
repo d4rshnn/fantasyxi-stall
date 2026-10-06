@@ -101,6 +101,10 @@ export function AdminScreen({ ready, leaderboard, settings, dispatch, onClose, o
       <p className="hint admin__pin-note">
         Delete, reset and replace need the operator PIN (set in <code>src/config.ts</code>). The PIN only prevents accidents. It is <strong>not</strong> security.
       </p>
+      {/* The leaderboard lives in localStorage, which belongs to one exact address + browser profile. */}
+      <p className="hint admin__origin">
+        This leaderboard is saved in this browser at <strong>{window.location.origin}</strong>. A different address, browser profile or device has its own separate board.
+      </p>
 
       {!leaderboard.storageOk && (
         <p className="message message--static admin__warning" role="alert">
