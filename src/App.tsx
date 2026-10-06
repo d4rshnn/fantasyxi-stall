@@ -20,7 +20,9 @@ import { LoadErrorScreen, LoadingScreen } from "./screens/StatusScreens";
 import { PlaceholderScreen } from "./components/PlaceholderScreen";
 import { fetchRevealFor } from "./state/reveal";
 import { clearSession, readSession, writeSession } from "./state/session";
-import { browserStorage, loadBoard, saveBoard } from "./state/leaderboard";
+import { browserStorage, loadBoard, saveBoard, serializeBoard } from "./state/leaderboard";
+import { DevCrash, ErrorBoundary } from "./components/ErrorBoundary";
+import { downloadText, stamp } from "./components/download";
 import { IDLE_SCREENS } from "./state/idle";
 import { IdleReset } from "./components/IdleReset";
 
@@ -42,6 +44,12 @@ function newGameId(): string {
 }
 
 /** Dev-only: `?timer=15` shortens the countdown to 15 s for testing. Ignored in production builds. */
+/** Dev-only: `?crash=simulate` makes that screen crash, to test the error boundary. Ignored in builds. */
+function devCrashScreen(): string | null {
+  if (!import.meta.env.DEV) return null;
+  return new URLSearchParams(window.location.search).get("crash");
+}
+
 function devTimerMs(): number | undefined {
   if (!import.meta.env.DEV) return undefined;
   const s = Number(new URLSearchParams(window.location.search).get("timer"));
@@ -93,6 +101,20 @@ export function App() {
     const [gw, dv] = metaKey.split(":");
     if (!saveBoard(browserStorage(), { gameweek: Number(gw), dataVersion: dv! }, boardEntries)) dispatch({ type: "STORAGE_FAILED" });
   }, [metaKey, boardEntries, storageOk]);
+
+  // Crash recovery: a fresh game, the leaderboard kept (App state + storage). A new key remounts the screens.
+  const [boundaryKey, setBoundaryKey] = useState(0);
+  const [devCrashOn] = useState(devCrashScreen);
+  const restartAfterCrash = () => {
+    clearSession();
+    clearAdminHash();
+    dispatch({ type: "RESET" });
+    setBoundaryKey((k) => k + 1);
+  };
+  const exportBoardBackup = () => {
+    if (!boardMeta) return;
+    downloadText(`fantasyxi-leaderboard-gw${boardMeta.gameweek}-${stamp()}.json`, serializeBoard(state.leaderboard.entries, boardMeta, new Date().toISOString()), "application/json");
+  };
 
   const resetToStart = useCallback(() => {
     clearAdminHash();
@@ -185,6 +207,8 @@ export function App() {
           onAdmin={openAdmin}
         />
       )}
+      <ErrorBoundary key={boundaryKey} onRestart={restartAfterCrash} onExportBoard={state.leaderboard.storageOk ? undefined : exportBoardBackup}>
+      {devCrashOn === state.screen && <DevCrash />}
       {state.screen === "admin" ? (
         <AdminScreen
           ready={state.data.status === "ready" ? { data: state.data.data, ctx: state.data.ctx } : null}
@@ -201,6 +225,7 @@ export function App() {
         renderMain(state, dispatch, () => setLoadAttempt((n) => n + 1), timerMs)
       )}
       {showTimeUp && state.build && <TimeUpDialog build={state.build} dispatch={dispatch} />}
+      </ErrorBoundary>
       {navGuard && <div className="nav-guard" aria-hidden="true" />}
       <IdleReset active={state.data.status === "ready" && IDLE_SCREENS.includes(state.screen)} onReset={resetToStart} />
     </div>

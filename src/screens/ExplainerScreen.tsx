@@ -165,7 +165,7 @@ function stepContent(step: number, d: ExplainerData, humanScore: number | null):
                   {d.examples.map((e) => (
                     <tr key={e.id}>
                       <td>
-                        {shortName(e.name, 16)} <span className="est-table__club">{e.club}</span>
+                        <span className="est-table__name">{e.name}</span> <span className="est-table__club">{e.club}</span>
                       </td>
                       <td>{e.estimate.toFixed(1)}</td>
                       <td className={e.actual >= e.estimate ? "pts--plus" : "pts--minus"}>{e.actual}</td>
@@ -299,13 +299,13 @@ function EndNotes({ data }: { data: ExplainerData }) {
 function PredictDiagram() {
   return (
     <div className="dia dia--predict">
+      {/* No gameweek numbers on purpose: which exact weeks the model reads was never verified. */}
       <div className="dia__gws">
-        {[32, 33, 34, 35, 36].map((g, i) => (
-          <span key={g} className="dia__gw" style={{ animationDelay: `${i * 50}ms` }}>
-            GW{g}
-          </span>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <span key={i} className="dia__gw dia__gw--blank" style={{ animationDelay: `${i * 50}ms` }} />
         ))}
       </div>
+      <span className="dia__caption">Last 5 gameweeks</span>
       <span className="dia__arrow">↓</span>
       <span className="dia__box">BiLSTM</span>
       <span className="dia__arrow">↓</span>

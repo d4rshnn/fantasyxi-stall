@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { useFocusTrap } from "./useFocusTrap";
 
 interface Props {
   title: string;
@@ -10,6 +11,7 @@ interface Props {
 /** A simple modal dialog. Escape closes it when onClose is given. Focus starts on the first action. */
 export function Dialog({ title, children, actions, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(ref);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>(".dialog__actions button")?.focus();
     if (!onClose) return;

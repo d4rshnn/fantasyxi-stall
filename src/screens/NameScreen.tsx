@@ -19,7 +19,7 @@ export function NameScreen({ teamName, dispatch }: { teamName: string; dispatch:
           className="input input--big"
           type="text"
           value={teamName}
-          maxLength={TEAM_NAME_MAX}
+          maxLength={TEAM_NAME_MAX * 2}
           placeholder="Your team name"
           aria-label="Team name"
           autoFocus

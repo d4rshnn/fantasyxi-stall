@@ -12,6 +12,7 @@
   --color-text: #f4f6fb;
   --color-text-muted: #9aa5c0;
   --color-text-on-accent: #0b0f1a;
+  --color-text-on-pitch: #c3cbe0; /* labels on the green pitch (6.7:1) */
 
   /* The one accent, plus states */
   --color-accent: #c8ff2e;
@@ -27,6 +28,7 @@
   /* Typography */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Barlow Condensed", "Inter", system-ui, sans-serif;
+  --text-xs: 0.78rem; /* card details (club, price, opponent) */
   --text-sm: 0.875rem;
   --text-md: 1rem;
   --text-lg: 1.25rem;
@@ -55,6 +57,14 @@
   --duration-fast: 120ms;
   --duration-base: 220ms; /* keep all transitions under 300ms */
   --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Laptop-size screens are read from 1-2 m away: small text a little larger. */
+@media (min-width: 1024px) {
+  :root {
+    --text-xs: 0.8rem;
+    --text-sm: 0.95rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

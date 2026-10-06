@@ -218,7 +218,7 @@
 /* ---- Slots ---- */
 .slot {
   position: relative;
-  width: clamp(74px, 17vw, 128px);
+  width: clamp(74px, 17vw, 136px);
   min-height: 100px;
   padding: var(--space-1);
   border-radius: var(--radius-md);
@@ -264,7 +264,7 @@
 .slot__pos {
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  color: var(--color-text-muted);
+  color: var(--color-text-on-pitch);
 }
 
 .slot-card {
@@ -283,8 +283,12 @@
   line-height: 1.15;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  /* Up to two lines, so names aren't cut to "Ferna..." */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  text-align: center;
 }
 
 .slot-card__name--narrow {
@@ -292,7 +296,7 @@
 }
 
 .slot-card__meta {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -515,7 +519,7 @@
 
 .btn--danger {
   background: var(--color-danger);
-  color: #fff;
+  color: var(--color-text-on-accent); /* dark on red: 6.3:1 (white was only 3.1:1) */
 }
 
 .btn:disabled {
@@ -711,9 +715,7 @@
 
 .pick-row__name {
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .pick-row__meta {
@@ -779,7 +781,7 @@
   }
 
   .slot-card__meta {
-    font-size: 10px;
+    font-size: 0.66rem;
   }
 
   .pitch .slot-card__name--wide {
@@ -787,7 +789,7 @@
   }
 
   .pitch .slot-card__name--narrow {
-    display: block;
+    display: -webkit-box;
   }
 
   .bench {

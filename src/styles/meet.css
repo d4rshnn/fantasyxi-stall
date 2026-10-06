@@ -297,7 +297,7 @@
 
   .versus .pitch .slot-card__name--narrow,
   .bench-strip .slot-card__name--narrow {
-    display: block;
+    display: -webkit-box;
   }
 
   .bench-strip {

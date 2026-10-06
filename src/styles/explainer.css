@@ -425,3 +425,23 @@
   position: static;
   background: none;
 }
+
+/* S9: blank gameweek boxes (no week numbers), full names that wrap instead of "…". */
+.dia__gw--blank {
+  width: 2.6rem;
+  height: 1.8rem;
+}
+
+.est-table__name {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .est-table {
+    font-size: 1rem;
+  }
+
+  .est-table td:not(:first-child) {
+    font-size: 1.25rem;
+  }
+}

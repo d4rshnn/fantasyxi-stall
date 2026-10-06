@@ -1,4 +1,4 @@
-import { useState, type Dispatch } from "react";
+import { useEffect, useState, type Dispatch } from "react";
 import { FORMATIONS, type EngineContext } from "../engine";
 import { BuilderHeader } from "../components/BuilderHeader";
 import { Dialog } from "../components/Dialog";
@@ -17,6 +17,11 @@ export interface BuildScreenProps {
 
 export function BuildScreen({ build, ctx, dispatch, timerEnabled, timerMs }: BuildScreenProps) {
   const [picker, setPicker] = useState<number | null>(null);
+  // When time runs out, close the player list so only the time-up dialog is open.
+  const timeUp = build.timer.dialog !== null;
+  useEffect(() => {
+    if (timeUp) setPicker(null);
+  }, [timeUp]);
   const [confirmStartOver, setConfirmStartOver] = useState(false);
   const { lineup } = build;
   const xiFilled = filledCount(lineup, "xi");

@@ -3,7 +3,7 @@ import type { InitialData } from "../data/types";
 import { buildReducer, newBuild, type BuildAction, type BuildState } from "./build";
 import { REVEAL_IDLE, type RevealState } from "./reveal";
 import { restoreLocked } from "./session";
-import { cleanTeamName, TEAM_NAME_MAX } from "./teamNames";
+import { cleanTeamName, limitChars, TEAM_NAME_MAX } from "./teamNames";
 import { addEntryOnce, makeEntry, mergeEntries, type LeaderboardEntry } from "./leaderboard";
 
 /** The main game flow, in order. "Next" moves one step; after the last screen it starts a new game. */
@@ -150,7 +150,7 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, screen: action.screen };
     case "SET_TEAM_NAME":
       if (isLocked(state)) return state;
-      return { ...state, teamName: action.name.slice(0, TEAM_NAME_MAX) };
+      return { ...state, teamName: limitChars(action.name, TEAM_NAME_MAX) };
     case "REVEAL_REQUEST": {
       // Spoiler guard: reveal data is only ever requested for a locked team.
       if (!isLocked(state) || state.reveal.status === "loading" || state.reveal.status === "ready") return state;
@@ -228,8 +228,11 @@ export function reducer(state: AppState, action: Action): AppState {
       const gameId = typeof savedId === "string" && savedId ? savedId : null;
       // Already finished and saved? Go straight to the result (no second replay, no second entry).
       const entry = gameId ? loaded.leaderboard.entries.find((e) => e.id === gameId) : undefined;
-      if (entry) return { ...loaded, ...restored, gameId, screen: "result", reveal: REVEAL_IDLE, outcome: { human: entry.score, ai: entry.aiScore } };
-      return { ...loaded, ...restored, gameId, screen: "meet", reveal: REVEAL_IDLE };
+      const target: FlowScreen = entry ? "result" : "meet";
+      // If the page was opened on #/admin, stay in admin; closing it returns to the restored game.
+      const where = state.screen === "admin" ? { screen: "admin" as const, returnTo: target } : { screen: target };
+      if (entry) return { ...loaded, ...restored, gameId, ...where, reveal: REVEAL_IDLE, outcome: { human: entry.score, ai: entry.aiScore } };
+      return { ...loaded, ...restored, gameId, ...where, reveal: REVEAL_IDLE };
     }
     case "DATA_FAILED":
       return { ...state, data: { status: "error", message: action.message } };

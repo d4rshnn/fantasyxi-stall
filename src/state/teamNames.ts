@@ -50,7 +50,12 @@ export function randomTeamName(current: string, rand: () => number = Math.random
   return options[Math.floor(rand() * options.length)] ?? RANDOM_TEAM_NAMES[0];
 }
 
+/** Cuts to `max` characters without splitting an emoji (or other character made of two code units). */
+export function limitChars(s: string, max: number): string {
+  return Array.from(s).slice(0, max).join("");
+}
+
 /** Trimmed, inner spaces collapsed, cut to the max length. */
 export function cleanTeamName(raw: string): string {
-  return raw.replace(/\s+/g, " ").trim().slice(0, TEAM_NAME_MAX).trim();
+  return limitChars(raw.replace(/\s+/g, " ").trim(), TEAM_NAME_MAX).trim();
 }

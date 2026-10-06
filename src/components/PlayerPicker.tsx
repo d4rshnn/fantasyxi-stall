@@ -1,4 +1,5 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "./useFocusTrap";
 import { checkCandidates, formatPrice, POSITION_NAMES, type EngineContext, type Lineup } from "../engine";
 import { KitBadge, opponentLabel } from "./PlayerCard";
 import { searchKey } from "./names";
@@ -21,6 +22,8 @@ export function PlayerPicker({ lineup, slotIndex, ctx, onPick, onRemove, onClose
   const [sort, setSort] = useState<"high" | "low">("high");
   const [hideUnavailable, setHideUnavailable] = useState(false);
   const deferredQuery = useDeferredValue(query);
+  const panel = useRef<HTMLElement>(null);
+  useFocusTrap(panel);
 
   const checks = useMemo(() => checkCandidates(lineup, slotIndex, ctx), [lineup, slotIndex, ctx]);
   const keyed = useMemo(
@@ -43,7 +46,7 @@ export function PlayerPicker({ lineup, slotIndex, ctx, onPick, onRemove, onClose
   const posName = POSITION_NAMES[slot.position];
   return (
     <div className="overlay overlay--sheet" role="presentation" onClick={onClose}>
-      <section className="picker" role="dialog" aria-modal="true" aria-label={`Choose a ${posName.one}`} onClick={(e) => e.stopPropagation()}>
+      <section className="picker" ref={panel} role="dialog" aria-modal="true" aria-label={`Choose a ${posName.one}`} onClick={(e) => e.stopPropagation()}>
         <header className="picker__header">
           <h2 className="picker__title">Choose a {posName.one}</h2>
           <button type="button" className="btn btn--ghost btn--small" onClick={onClose}>
@@ -90,6 +93,8 @@ export function PlayerPicker({ lineup, slotIndex, ctx, onPick, onRemove, onClose
                   type="button"
                   className={`pick-row ${ok ? "" : "pick-row--blocked"} ${isCurrent ? "pick-row--current" : ""}`}
                   aria-disabled={!ok}
+                  // Greyed-out players stay visible (with the reason) but are skipped by Tab.
+                  tabIndex={ok && !isCurrent ? 0 : -1}
                   onClick={() => ok && !isCurrent && onPick(p.id)}
                   data-player={p.id}
                 >

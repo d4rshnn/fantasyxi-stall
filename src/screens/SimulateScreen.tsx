@@ -55,6 +55,14 @@ export function SimulateScreen({ ctx, teamName, humanTeam, aiTeam, reveal, dispa
     return () => window.clearTimeout(id);
   }, [replay, index, speed, paused, view.finished]);
 
+  // Continue appears where "Skip to final" was: ignore it briefly so a double-click can't skip "Final score".
+  const [continueReady, setContinueReady] = useState(false);
+  useEffect(() => {
+    if (!view.finished) return;
+    const id = window.setTimeout(() => setContinueReady(true), 600);
+    return () => window.clearTimeout(id);
+  }, [view.finished]);
+
   // Store the final totals (the engine's) for the Result screen.
   useEffect(() => {
     if (view.finished) dispatch({ type: "SIMULATION_FINISHED", outcome: replay.totals, finishedAt: Date.now() });
@@ -97,7 +105,7 @@ export function SimulateScreen({ ctx, teamName, humanTeam, aiTeam, reveal, dispa
         {view.finished && (
           <div className="sim__final">
             <span className="sim__final-label">Final score</span>
-            <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: "GOTO", screen: "result" })} autoFocus>
+            <button type="button" className="btn btn--primary" onClick={() => continueReady && dispatch({ type: "GOTO", screen: "result" })} aria-disabled={!continueReady} autoFocus>
               Continue
             </button>
           </div>
