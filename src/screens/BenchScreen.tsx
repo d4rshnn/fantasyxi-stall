@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BENCH_AUTOFILL_RULE_TEXT } from "../engine";
 import { BuilderHeader } from "../components/BuilderHeader";
 import { SlotButton } from "../components/Pitch";
-import { PlayerPicker } from "../components/PlayerPicker";
+import { PlayerMarket } from "../components/PlayerMarket";
 import { filledCount, slotCount } from "../state/build";
 import type { BuildScreenProps } from "./BuildScreen";
 
@@ -77,7 +77,7 @@ export function BenchScreen({ build, ctx, dispatch, timerEnabled, timerMs }: Bui
       </footer>
 
       {picker !== null && (
-        <PlayerPicker
+        <PlayerMarket
           lineup={lineup}
           slotIndex={picker}
           ctx={ctx}

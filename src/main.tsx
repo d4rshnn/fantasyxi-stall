@@ -5,6 +5,7 @@ import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/builder.css";
+import "./styles/market.css";
 import "./styles/meet.css";
 import "./styles/sim.css";
 import "./styles/end.css";

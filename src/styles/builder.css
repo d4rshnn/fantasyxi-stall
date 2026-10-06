@@ -1,4 +1,4 @@
-/* Team builder: header, pitch, slots, picker, bench, dialogs. Uses tokens from tokens.css. */
+/* Team builder: header, pitch, slots, bench, dialogs. Uses tokens from tokens.css. */
 
 .builder {
   flex: 1;
@@ -133,6 +133,42 @@
 
 .budget__free strong {
   color: var(--color-accent);
+}
+
+.budget__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.budget__legend strong {
+  color: var(--color-text);
+}
+
+.budget__swatch {
+  flex: none;
+  width: 22px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(135deg, #5a6688 0 6px, #46516f 6px 12px);
+}
+
+.budget__why {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: var(--text-sm);
+}
+
+.budget__help {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
 }
 
 .budget--problem .budget__bar {
@@ -537,7 +573,7 @@
   justify-content: center;
 }
 
-/* ---- Overlays: dialogs and the player picker ---- */
+/* ---- Overlays: dialogs (player market: market.css) ---- */
 .overlay {
   position: fixed;
   inset: 0;
@@ -547,11 +583,6 @@
   padding: var(--space-4);
   background: rgba(5, 8, 15, 0.72);
   animation: fade-in var(--duration-base) ease-out;
-}
-
-.overlay--sheet {
-  place-items: stretch end;
-  padding: 0;
 }
 
 .dialog {
@@ -578,43 +609,6 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-3);
-}
-
-.picker {
-  width: min(560px, 100vw);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-raised);
-  animation: slide-in var(--duration-base) ease-out;
-}
-
-.picker__header,
-.picker__current,
-.picker__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-}
-
-.picker__header {
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.picker__title {
-  font-size: var(--text-xl);
-}
-
-.picker__current {
-  justify-content: space-between;
-  background: var(--color-surface-raised);
-}
-
-.picker__controls {
-  flex-wrap: wrap;
 }
 
 .input {
@@ -653,103 +647,15 @@
   color: var(--color-text);
 }
 
-.picker__list {
-  flex: 1;
-  overflow-y: auto;
-  list-style: none;
-  margin: 0;
-  padding: 0 var(--space-2) var(--space-4);
-}
-
-/* Long lists (up to ~380 midfielders): let the browser skip rows that are off-screen. */
-.picker__list > li {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 61px;
-}
-
-.picker__empty {
-  padding: var(--space-5);
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.pick-row {
-  width: 100%;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border: 0;
-  border-bottom: 1px solid var(--color-border);
-  background: transparent;
-  text-align: left;
-}
-
-.pick-row:hover:not(.pick-row--blocked) {
-  background: var(--color-surface-raised);
-}
-
-.pick-row--blocked {
-  cursor: not-allowed;
-}
-
-.pick-row--blocked .kit,
-.pick-row--blocked .pick-row__name,
-.pick-row--blocked .pick-row__meta,
-.pick-row--blocked .pick-row__price {
-  opacity: 0.45;
-}
-
-.pick-row--current {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-
-.pick-row__main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.pick-row__name {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.pick-row__meta {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.pick-row__reason {
-  font-size: var(--text-sm);
-  color: #ffb3b5;
-}
-
-.pick-row__price {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 700;
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
   }
 }
 
-@keyframes slide-in {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .overlay,
-  .picker {
+  .market {
     animation: none;
   }
 }
@@ -822,7 +728,4 @@
     font-size: var(--text-sm);
   }
 
-  .overlay--sheet .picker {
-    width: 100vw;
-  }
 }

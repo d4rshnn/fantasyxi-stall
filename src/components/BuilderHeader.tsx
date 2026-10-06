@@ -48,7 +48,7 @@ export function BuilderHeader({ step, build, ctx, dispatch, timerEnabled, timerM
         </ol>
         {timerEnabled && <Timer endsAt={build.timer.endsAt} onTimeUp={onTimeUp} />}
       </div>
-      <BudgetBar lineup={build.lineup} ctx={ctx} />
+      <BudgetBar lineup={build.lineup} ctx={ctx} step={step} />
       <div className="message-slot" aria-live="polite">
         {build.message && (
           <button type="button" className="message" onClick={() => dispatch({ type: "DISMISS_MESSAGE" })}>

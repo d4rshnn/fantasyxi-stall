@@ -1,0 +1,440 @@
+/* Player market (S4b): large centred modal; full screen on phones. Uses tokens from tokens.css.
+   Scrolling: the overlay is a grid, and a grid row sized "auto" grows to fit ALL cards (min-height:
+   auto), so nothing could scroll. The row is pinned to the screen (minmax(0, 1fr)) and only
+   .market__body scrolls; overscroll-behavior stops the page behind from scrolling. */
+
+.overlay--market {
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  place-items: stretch;
+  padding: 5vh 4vw;
+}
+
+.market {
+  justify-self: center;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  animation: fade-in var(--duration-base) ease-out;
+}
+
+/* ---- Top bar (never scrolls) ---- */
+.market__top {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.market__heading {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.market__title {
+  font-size: var(--text-xl);
+}
+
+.market__limit {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.market__limit strong {
+  color: var(--color-accent);
+}
+
+.market__search {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+
+/* ---- The one scrolling area ---- */
+.market__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--space-4) var(--space-5);
+}
+
+.market__body:focus-visible {
+  outline-offset: -3px;
+}
+
+.market__current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.market__filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.chips__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.mchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.mchip--on {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.mchip__kit {
+  width: 16px;
+  height: 16px;
+  border: 2px solid;
+  border-radius: 50%;
+}
+
+.mchip__sub {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.market__hide {
+  margin-left: var(--space-2);
+  min-height: 44px;
+  font-size: var(--text-md);
+}
+
+/* ---- Random ideas: sticks to the top of the scrolling area ---- */
+.ideas {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 calc(-1 * var(--space-4));
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+}
+
+.ideas__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ideas__label {
+  flex: 1 1 auto;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* One row of 6 so the sticky strip stays short on a 700 px laptop (full name on hover/long-press). */
+.ideas__row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.ideas__empty {
+  color: var(--color-text-muted);
+}
+
+.idea {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  text-align: left;
+}
+
+.idea:hover {
+  border-color: var(--color-accent);
+}
+
+.idea__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.idea__price {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.market__count {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  font-size: var(--text-lg);
+}
+
+/* ---- Card grid ---- */
+.market__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Up to ~380 midfielders: let the browser skip cards that are off-screen. */
+.market__grid > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 92px;
+}
+
+.market__empty {
+  grid-column: 1 / -1;
+  padding: var(--space-5);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.mcard {
+  width: 100%;
+  height: 100%;
+  min-height: 84px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "kit main price";
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  text-align: left;
+}
+
+.mcard .kit {
+  grid-area: kit;
+}
+
+.mcard:hover:not(.mcard--blocked) {
+  border-color: var(--color-accent);
+}
+
+.mcard--blocked {
+  cursor: not-allowed;
+}
+
+.mcard--blocked .kit,
+.mcard--blocked .mcard__name,
+.mcard--blocked .mcard__meta,
+.mcard--blocked .mcard__price {
+  opacity: 0.45;
+}
+
+.mcard--current {
+  border-color: var(--color-accent);
+  cursor: default;
+}
+
+.mcard__main {
+  grid-area: main;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mcard__name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.mcard__meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.mcard__note {
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+}
+
+.mcard__reason {
+  font-size: var(--text-sm);
+  line-height: 1.25;
+  color: #ffb3b5;
+}
+
+.mcard__price {
+  grid-area: price;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+/* ---- Phones: full screen, 2 columns (1 on very narrow phones) ---- */
+@media (max-width: 640px) {
+  .overlay--market {
+    padding: 0;
+  }
+
+  .market {
+    max-width: none;
+    border-radius: 0;
+  }
+
+  .market__top,
+  .market__body {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+
+  .ideas {
+    margin: 0 calc(-1 * var(--space-3));
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .market__title {
+    font-size: var(--text-lg);
+  }
+
+  .market__search {
+    max-width: none;
+  }
+
+  /* Compact chips so the clubs (still wrapping) don't fill the whole first screen. */
+  .chips {
+    gap: var(--space-1);
+  }
+
+  .mchip {
+    min-height: 40px;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
+    font-size: var(--text-md);
+  }
+
+  .mchip__kit {
+    width: 12px;
+    height: 12px;
+  }
+
+  .market__filters {
+    padding: var(--space-2) 0;
+  }
+
+  /* Ideas: one swipeable row and a compact header, so the sticky strip stays short. */
+  .ideas__label {
+    flex-basis: 100%;
+    font-size: var(--text-md);
+  }
+
+  .ideas__head .btn--small {
+    flex: 1;
+    min-height: 40px;
+    font-size: var(--text-md);
+  }
+
+  .ideas__row {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .idea {
+    flex: none;
+    min-height: 44px;
+  }
+
+  .market__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market__grid > li {
+    contain-intrinsic-size: auto 132px;
+  }
+
+  .mcard {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "kit price"
+      "main main";
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+
+  .mcard__price {
+    justify-self: end;
+    font-size: var(--text-lg);
+  }
+
+  .mcard__name {
+    font-size: var(--text-md);
+  }
+}
+
+@media (max-width: 360px) {
+  .market__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market {
+    animation: none;
+  }
+}

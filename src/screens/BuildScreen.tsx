@@ -3,7 +3,7 @@ import { FORMATIONS, type EngineContext } from "../engine";
 import { BuilderHeader } from "../components/BuilderHeader";
 import { Dialog } from "../components/Dialog";
 import { Pitch, SlotButton } from "../components/Pitch";
-import { PlayerPicker } from "../components/PlayerPicker";
+import { PlayerMarket } from "../components/PlayerMarket";
 import { filledCount, slotCount, type BuildState } from "../state/build";
 import type { Action } from "../state/machine";
 
@@ -72,7 +72,7 @@ export function BuildScreen({ build, ctx, dispatch, timerEnabled, timerMs }: Bui
       </footer>
 
       {picker !== null && (
-        <PlayerPicker
+        <PlayerMarket
           lineup={lineup}
           slotIndex={picker}
           ctx={ctx}

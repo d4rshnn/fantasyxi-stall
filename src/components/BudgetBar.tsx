@@ -1,40 +1,63 @@
+import { useState } from "react";
 import { budgetStatus, formatPrice, type EngineContext, type Lineup } from "../engine";
+import { budgetWords, cheapestPrice } from "../state/market";
 
-/** Spent / left / kept for empty spots / free to spend, from the engine's budgetStatus. */
-export function BudgetBar({ lineup, ctx }: { lineup: Lineup; ctx: EngineContext }) {
+interface Props {
+  lineup: Lineup;
+  ctx: EngineContext;
+  step: "build" | "bench" | "captain";
+}
+
+/** Spent / reserved for the rest of the squad / free, in plain words. Numbers come only from the
+ *  engine's budgetStatus (budgetWords just formats them). */
+export function BudgetBar({ lineup, ctx, step }: Props) {
+  const [help, setHelp] = useState(false);
   const b = budgetStatus(lineup, ctx);
+  const w = budgetWords(b);
   const total = ctx.rules.budget;
-  const reserved = b.reservedForEmpty ?? 0;
-  const problem = b.freeToSpend === null || b.freeToSpend < 0;
   const pct = (x: number) => `${Math.max(0, Math.min(100, (x / total) * 100))}%`;
+  const benchEmpty = lineup.slots.some((s) => s.kind === "bench" && s.playerId === null);
+  const note =
+    step === "build" && benchEmpty
+      ? "Your bench is kept at the cheapest price; upgrade it on the Bench step."
+      : step === "bench" && benchEmpty
+        ? "Spend leftover money to upgrade your bench."
+        : null;
+  const why = `Every player costs at least ${formatPrice(cheapestPrice(ctx))}, so we set money aside so you can always finish a legal team.`;
   return (
-    <div className={`budget ${problem ? "budget--problem" : ""}`} role="group" aria-label="Budget">
+    <div className={`budget ${w.problem ? "budget--problem" : ""}`} role="group" aria-label="Budget">
       <div className="budget__bar" aria-hidden="true">
         <span className="budget__spent" style={{ width: pct(b.spent) }} />
-        <span className="budget__reserved" style={{ width: pct(reserved) }} />
+        <span className="budget__reserved" style={{ width: pct(b.reservedForEmpty ?? 0) }} />
       </div>
       <div className="budget__labels">
         <span>
-          <strong>{formatPrice(b.spent)}</strong> spent
+          <strong>{w.spent}</strong> spent
         </span>
-        <span>
-          <strong>{formatPrice(b.remaining)}</strong> left
-        </span>
-        {b.emptySlots > 0 && (
-          <span className="budget__reserve-label">
-            keep <strong>{formatPrice(reserved)}</strong> for {b.emptySlots} empty {b.emptySlots === 1 ? "spot" : "spots"}
-          </span>
-        )}
+        <span>{w.left}</span>
+        {w.average && <span>{w.average}</span>}
         <span className="budget__free">
-          {problem ? (
+          {w.problem ? (
             <strong>Over budget: remove a player</strong>
           ) : (
             <>
-              <strong>{formatPrice(b.freeToSpend!)}</strong> free to spend
+              Free to spend now: <strong>{w.free}</strong>
             </>
           )}
         </span>
       </div>
+      {w.reserved && (
+        <div className="budget__legend" title={why}>
+          <span className="budget__swatch" aria-hidden="true" />
+          <span>
+            <strong>{w.reserved}</strong> reserved for the rest of your squad.{note && ` ${note}`}
+          </span>
+          <button type="button" className="budget__why" aria-expanded={help} onClick={() => setHelp(!help)}>
+            Why?
+          </button>
+        </div>
+      )}
+      {w.reserved && help && <p className="budget__help">{why}</p>}
     </div>
   );
 }
