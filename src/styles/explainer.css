@@ -1,159 +1,104 @@
-/* "How did FantasyXI build its team?" explainer: big text for reading from 1-2 m away. */
+/* One-page "How FantasyXI works": a 5-box diagram, left to right on laptops, top to bottom on phones.
+   Big text for reading from 1-2 m away. */
 
-.explainer {
+.how {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   width: 100%;
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: var(--space-4);
 }
 
-.explainer__top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
+.how__title {
+  font-size: var(--text-2xl);
+  text-align: center;
 }
 
-.explainer__top .screen__eyebrow {
-  flex: 1;
+/* ---- Diagram ---- */
+.arch {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-1);
   margin: 0;
-}
-
-.explainer__dots {
-  display: flex;
-  gap: var(--space-2);
+  padding: 0;
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
-.ex-dot {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border-radius: 50%;
-  border: 3px solid var(--color-border);
-  background: transparent;
-}
-
-.ex-dot--done {
-  border-color: var(--color-accent);
-  background: var(--color-accent-strong);
-  opacity: 0.6;
-}
-
-.ex-dot--on {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-}
-
-.explainer__step {
+.arch__box {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  animation: ex-in var(--duration-base) ease-out;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: center;
 }
 
-@keyframes ex-in {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
+.arch__box--accent {
+  border-color: var(--color-accent);
 }
 
-.explainer__num {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.explainer__title {
-  font-size: clamp(2.4rem, 5vw, 4rem);
+.arch__icon {
   color: var(--color-accent);
 }
 
-.explainer__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: var(--space-6);
-  align-items: center;
+.arch__title {
+  font-size: var(--text-xl);
+  overflow-wrap: anywhere;
 }
 
-.explainer__text p {
-  margin: 0 0 var(--space-3);
-  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
-  line-height: 1.35;
-}
-
-.explainer__example {
-  padding: var(--space-4);
-  border-left: 5px solid var(--color-accent);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: clamp(1.1rem, 1.9vw, 1.35rem);
-}
-
-.explainer__example p {
-  margin: 0 0 var(--space-2);
-}
-
-.explainer__example-lead {
-  font-weight: 600;
-}
-
-.est-table {
-  width: 100%;
-  max-width: 640px;
-  border-collapse: collapse;
-  margin-bottom: var(--space-2);
-}
-
-.est-table th,
-.est-table td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  text-align: left;
-}
-
-.est-table th {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.est-table td:not(:first-child),
-.est-table th:not(:first-child) {
-  text-align: right;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-}
-
-.est-table th:not(:first-child) {
+.arch__bracket {
+  display: block;
+  margin-top: var(--space-1);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-}
-
-.est-table__club {
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
 }
 
-.explainer__notes {
+.arch__text {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.3;
+}
+
+.arch__facts {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 2px;
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
 }
 
-.explainer__footnote {
-  margin: 0;
+.arch__facts strong {
+  color: var(--color-accent);
+}
+
+.arch__arrow {
+  flex: none;
+  display: grid;
+  place-items: center;
   color: var(--color-text-muted);
+}
+
+/* ---- Notes ---- */
+.how__note {
+  max-width: 60rem;
+  margin: 0 auto;
   font-size: var(--text-lg);
+  text-align: center;
+  color: var(--color-text-muted);
 }
 
 .learn-more {
@@ -182,266 +127,34 @@
   margin-bottom: var(--space-2);
 }
 
-.explainer__nav {
-  justify-content: space-between;
-}
-
-/* ---- Diagrams ---- */
-.dia {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-}
-
-.dia__gws {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.dia__gw {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-raised);
-  font-family: var(--font-display);
-  animation: ex-pop var(--duration-base) ease-out backwards;
-}
-
-@keyframes ex-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-}
-
-.dia__arrow {
-  color: var(--color-text-muted);
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.dia__box {
-  padding: var(--space-2) var(--space-4);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  text-align: center;
-}
-
-.dia__box--accent {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.dia--funnel {
-  position: relative;
-}
-
-.dia__svg {
-  width: 100%;
-  max-width: 280px;
-}
-
-.dia__funnel {
-  fill: var(--color-surface-raised);
-  stroke: var(--color-accent);
-  stroke-width: 2;
-}
-
-.dia__funnel-top,
-.dia__funnel-bottom {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-}
-
-.dia__funnel-bottom {
-  color: var(--color-accent);
-}
-
-.dia__budget {
-  width: 100%;
-  height: 16px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-raised);
-  overflow: hidden;
-}
-
-.dia__budget-fill {
-  display: block;
-  height: 100%;
-  background: var(--color-accent);
-  animation: ex-grow 280ms ease-out;
-  transform-origin: left;
-}
-
-@keyframes ex-grow {
-  from {
-    transform: scaleX(0);
-  }
-}
-
-.dia__caption {
-  color: var(--color-text-muted);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-}
-
-.dia__squad {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.dia__squad-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.dia__pos {
-  width: 3rem;
-  color: var(--color-text-muted);
-  font-family: var(--font-display);
-}
-
-.dia__chip {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--color-accent);
-  opacity: 0.85;
-}
-
-.dia--xi {
-  background: var(--color-pitch);
-}
-
-.dia__xi-row {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.dia__dot {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--color-bg);
-  font-family: var(--font-display);
-  font-weight: 700;
-}
-
-.dia__dot--mark {
-  background: var(--color-accent);
-}
-
-.dia--play {
-  flex-direction: row;
+.how__actions {
   justify-content: center;
-  gap: var(--space-5);
 }
 
-.dia__score {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+/* ---- Narrow screens: top to bottom ---- */
+@media (max-width: 900px) {
+  .arch {
+    flex-direction: column;
+    align-items: center;
+  }
 
-.dia__score-label {
-  color: var(--color-text-muted);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  text-transform: uppercase;
-}
+  .arch__box {
+    width: 100%;
+    max-width: 520px;
+  }
 
-.dia__score--ai .dia__score-label {
-  color: var(--color-accent);
-}
-
-.dia__score-value {
-  font-family: var(--font-display);
-  font-size: 4rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.dia__vs {
-  color: var(--color-text-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .explainer__step,
-  .dia__gw,
-  .dia__budget-fill {
-    animation: none;
+  .arch__arrow svg {
+    transform: rotate(90deg);
   }
 }
 
-@media (max-width: 760px) {
-  .explainer {
-    padding: var(--space-3);
+@media (max-width: 640px) {
+  .how__title {
+    font-size: var(--text-xl);
   }
 
-  .explainer__top {
-    flex-wrap: wrap;
-  }
-
-  .explainer__top .screen__eyebrow {
-    flex-basis: 100%;
-  }
-
-  .explainer__grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
-  .explainer__diagram {
-    order: -1;
-  }
-
-  .dia {
-    padding: var(--space-3);
-  }
-
-  .dia__gw {
-    padding: 2px 6px;
-    font-size: var(--text-sm);
-  }
-
-  .est-table th,
-  .est-table td {
-    padding: var(--space-1) var(--space-2);
-  }
-}
-
-/* The explainer's nav sits under the content (not floating over it), so nothing is ever covered. */
-.explainer__nav.builder-footer {
-  position: static;
-  background: none;
-}
-
-/* S9: blank gameweek boxes (no week numbers), full names that wrap instead of "…". */
-.dia__gw--blank {
-  width: 2.6rem;
-  height: 1.8rem;
-}
-
-.est-table__name {
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 760px) {
-  .est-table {
-    font-size: 1rem;
-  }
-
-  .est-table td:not(:first-child) {
-    font-size: 1.25rem;
+  .how {
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-4);
   }
 }

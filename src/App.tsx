@@ -292,7 +292,6 @@ function renderMain(state: AppState, dispatch: Dispatch<Action>, retry: () => vo
           ctx={ctx}
           reveal={state.reveal}
           locked={!!build.lockedTeam}
-          humanScore={state.outcome?.human ?? null}
           dispatch={dispatch}
           onLeaderboard={() => dispatch({ type: "GOTO", screen: "leaderboard" })}
           onPlayAgain={playAgain}

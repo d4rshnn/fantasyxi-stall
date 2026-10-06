@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type Dispatch, type ReactNode } from "react";
-import { POSITIONS, type EngineContext } from "../engine";
-import { shortName } from "../components/names";
-import { buildExplainerData, EXPLAINER_STEPS, moveStep, type ExplainerData } from "../state/explainer";
+import { Fragment, useEffect, useRef, type Dispatch, type ReactNode } from "react";
+import type { EngineContext } from "../engine";
+import { buildExplainerData, type ExplainerData } from "../state/explainer";
 import type { RevealState } from "../state/reveal";
 import type { Action } from "../state/machine";
 
@@ -9,17 +8,15 @@ interface Props {
   ctx: EngineContext;
   reveal: RevealState;
   locked: boolean;
-  humanScore: number | null;
   dispatch: Dispatch<Action>;
   onLeaderboard: () => void;
   onPlayAgain: () => void;
 }
 
-const TITLES = ["Predict", "Shortlist", "Optimise", "Pick the XI and captain", "Play the gameweek"];
-
-/** "How did FantasyXI build its team?" Every sentence here is backed by CLAUDE.md "Verified AI facts"
- *  or docs/DATA_SOURCE.md (see the S8 sentence table). Numbers come from buildExplainerData(). */
-export function ExplainerScreen({ ctx, reveal, locked, humanScore, dispatch, onLeaderboard, onPlayAgain }: Props) {
+/** One-page "How FantasyXI works". Every sentence here is backed by CLAUDE.md "Verified AI facts",
+ *  docs/DATA_SOURCE.md or docs/PHASE2_REPORT.md (see the sentence table agreed for this screen).
+ *  Numbers come from buildExplainerData(). */
+export function ExplainerScreen({ ctx, reveal, locked, dispatch, onLeaderboard, onPlayAgain }: Props) {
   // After a refresh FantasyXI's data may need reloading (allowed: the team is locked).
   useEffect(() => {
     if (locked && reveal.status === "idle") dispatch({ type: "REVEAL_REQUEST" });
@@ -59,337 +56,163 @@ export function ExplainerScreen({ ctx, reveal, locked, humanScore, dispatch, onL
       </main>
     );
   }
-  return <Steps data={buildExplainerData(reveal.reveal, ctx)} humanScore={humanScore} onLeaderboard={onLeaderboard} onPlayAgain={onPlayAgain} />;
+  return <HowItWorks data={buildExplainerData(reveal.reveal, ctx)} onLeaderboard={onLeaderboard} onPlayAgain={onPlayAgain} />;
 }
 
-function Steps({ data, humanScore, onLeaderboard, onPlayAgain }: { data: ExplainerData; humanScore: number | null; onLeaderboard: () => void; onPlayAgain: () => void }) {
-  const [step, setStep] = useState(0);
-  const last = step === EXPLAINER_STEPS - 1;
+interface Box {
+  id: string;
+  icon: ReactNode;
+  title: ReactNode;
+  text: ReactNode;
+  accent?: boolean;
+}
 
-  // Keyboard: arrows move, Enter = next (unless a button/summary has focus), Escape = skip to the end.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const onControl = e.target instanceof HTMLElement && e.target.closest("button, summary, a, input");
-      if (e.key === "ArrowRight") setStep((s) => moveStep(s, 1));
-      else if (e.key === "ArrowLeft") setStep((s) => moveStep(s, -1));
-      else if (e.key === "Enter" && !onControl) setStep((s) => moveStep(s, 1));
-      else if (e.key === "Escape") setStep(EXPLAINER_STEPS - 1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const content = useMemo(() => stepContent(step, data, humanScore), [step, data, humanScore]);
+function HowItWorks({ data: d, onLeaderboard, onPlayAgain }: { data: ExplainerData; onLeaderboard: () => void; onPlayAgain: () => void }) {
+  // Focus Play again for keyboard users without scrolling the page (the diagram stays in view).
+  const playAgain = useRef<HTMLButtonElement>(null);
+  useEffect(() => playAgain.current?.focus({ preventScroll: true }), []);
+  const boxes: Box[] = [
+    { id: "data", icon: <IconData />, title: "Data", text: "Past player stats and prices." },
+    { id: "dl", icon: <IconNetwork />, title: "Deep learning (BiLSTM)", text: "Reads each player's last 5 gameweeks." },
+    { id: "pred", icon: <IconChart />, title: "Predicted points", text: "Tree models turn that into an estimated score for every player." },
+    {
+      id: "opt",
+      icon: <IconGears />,
+      title: (
+        <>
+          RL & optimisation layer <span className="arch__bracket">(PPO strategy + MILP optimiser)</span>
+        </>
+      ),
+      text: "The optimiser builds the best legal squad within £100m; over a season, PPO decides how bold to be.",
+    },
+    {
+      id: "xi",
+      icon: <IconShirt />,
+      title: "Final XI",
+      accent: true,
+      text: (
+        <>
+          FantasyXI's team for this week
+          <span className="arch__facts">
+            <span>{d.formation}</span>
+            <span>Captain: {d.captainName}</span>
+            <span>
+              <strong>{d.aiTotal}</strong> points
+            </span>
+          </span>
+        </>
+      ),
+    },
+  ];
 
   return (
-    <main className="explainer" aria-roledescription="explainer">
-      <header className="explainer__top">
-        <p className="screen__eyebrow">How did FantasyXI build its team?</p>
-        <ol className="explainer__dots" aria-label="Steps">
-          {TITLES.map((t, i) => (
-            <li key={t}>
-              <button type="button" className={`ex-dot ${i === step ? "ex-dot--on" : i < step ? "ex-dot--done" : ""}`} aria-label={`Step ${i + 1}: ${t}`} aria-current={i === step ? "step" : undefined} onClick={() => setStep(i)} />
+    <main className="how">
+      <h1 className="how__title">How FantasyXI works</h1>
+
+      <ol className="arch" aria-label="How FantasyXI picks its team, step by step">
+        {boxes.map((b, i) => (
+          <Fragment key={b.id}>
+            {i > 0 && (
+              <li className="arch__arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                  <path d="M4 12h14m-5-6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </li>
+            )}
+            <li className={`arch__box ${b.accent ? "arch__box--accent" : ""}`}>
+              <span className="arch__icon" aria-hidden="true">
+                {b.icon}
+              </span>
+              <h2 className="arch__title">{b.title}</h2>
+              <p className="arch__text">{b.text}</p>
             </li>
-          ))}
-        </ol>
-        {!last && (
-          <button type="button" className="btn btn--ghost btn--small explainer__skip" onClick={() => setStep(EXPLAINER_STEPS - 1)}>
-            Skip
-          </button>
-        )}
-      </header>
+          </Fragment>
+        ))}
+      </ol>
 
-      <section className="explainer__step" key={step} aria-live="polite">
-        <p className="explainer__num">Step {step + 1} of {EXPLAINER_STEPS}</p>
-        <h1 className="explainer__title">{TITLES[step]}</h1>
-        <div className="explainer__grid">
-          <div className="explainer__text">{content.text}</div>
-          <div className="explainer__diagram" aria-hidden="true">
-            {content.diagram}
-          </div>
-        </div>
-        {content.example && <div className="explainer__example">{content.example}</div>}
-      </section>
+      <p className="how__note">
+        In a single week like this one, the strategy layer kept the optimiser's squad as it was, so most of the work here came from the predictions and the optimiser.
+      </p>
 
-      {last && <EndNotes data={data} />}
+      <details className="learn-more">
+        <summary>Learn more (for the curious)</summary>
+        <ul>
+          <li>The BiLSTM turns each player's history into a summary; three tree models (LightGBM) use it to make the final points estimate.</li>
+          <li>That estimate is then blended: 65% model and 35% a price-based guess, with a boost of up to 20% for players in good form, and a minimum of 6.5 for players costing £9.5m or more.</li>
+          <li>
+            Captain: the starter with the highest predicted points × a position weight (forwards ×1.25, midfielders ×1.2, defenders ×0.85, goalkeepers ×0.5). The second highest is
+            vice-captain.
+          </li>
+          <li>The squad and the starting 11 are each picked by a MILP optimiser (a maths solver), not by reinforcement learning.</li>
+          <li>PPO outputs strategy settings (aggressiveness, budget, position bias). This week it asked for a wildcard, but chips are switched off at the stall, so nothing changed.</li>
+          <li>
+            A flaw we found: because of a data-matching bug in our pipeline, {d.flaggedPlayers} of the {d.totalPlayers} players this week got an estimate meant for a different player from an
+            earlier season.
+          </li>
+          <li>
+            {d.flaggedPicks} of FantasyXI's 15 picks were chosen using one of those estimates. This leaked no 2025-26 results, but those picks weren't based on a real estimate for that player.
+          </li>
+        </ul>
+      </details>
 
-      <footer className="builder-footer explainer__nav">
-        <button type="button" className="btn btn--ghost" onClick={() => setStep((s) => moveStep(s, -1))} disabled={step === 0}>
-          Back
+      <footer className="row-actions how__actions">
+        <button type="button" className="btn btn--ghost" onClick={onLeaderboard}>
+          Leaderboard
         </button>
-        {!last ? (
-          <button type="button" className="btn btn--primary" onClick={() => setStep((s) => moveStep(s, 1))} autoFocus>
-            Next
-          </button>
-        ) : (
-          <span className="row-actions">
-            <button type="button" className="btn btn--ghost" onClick={onLeaderboard}>
-              Leaderboard
-            </button>
-            <button type="button" className="btn btn--primary" onClick={onPlayAgain} autoFocus>
-              Play again
-            </button>
-          </span>
-        )}
+        <button type="button" className="btn btn--primary" onClick={onPlayAgain} ref={playAgain}>
+          Play again
+        </button>
       </footer>
     </main>
   );
 }
 
-function stepContent(step: number, d: ExplainerData, humanScore: number | null): { text: ReactNode; diagram: ReactNode; example?: ReactNode } {
-  switch (step) {
-    case 0:
-      return {
-        text: (
-          <>
-            <p>First, FantasyXI estimates how many points each player will score this week.</p>
-            <p>A neural network called a BiLSTM reads each player's last 5 gameweeks.</p>
-            <p>Tree models (LightGBM) turn that into a points estimate.</p>
-            <p>The estimate is then blended with the player's price and recent form.</p>
-          </>
-        ),
-        diagram: <PredictDiagram />,
-        example:
-          d.examples.length > 0 ? (
-            <>
-              <p className="explainer__example-lead">Some of FantasyXI's estimates for its own starters, and what really happened:</p>
-              <table className="est-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Player</th>
-                    <th scope="col">Estimate</th>
-                    <th scope="col">Real points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {d.examples.map((e) => (
-                    <tr key={e.id}>
-                      <td>
-                        <span className="est-table__name">{e.name}</span> <span className="est-table__club">{e.club}</span>
-                      </td>
-                      <td>{e.estimate.toFixed(1)}</td>
-                      <td className={e.actual >= e.estimate ? "pts--plus" : "pts--minus"}>{e.actual}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="hint">Estimates are only estimates: some were close, some were way off.</p>
-            </>
-          ) : undefined,
-      };
-    case 1:
-      return {
-        text: (
-          <>
-            <p>Out of {d.totalPlayers} players, FantasyXI keeps a shortlist of the most promising ones.</p>
-            <p>It takes the top estimates in each position, plus the most expensive stars and players in good form.</p>
-          </>
-        ),
-        diagram: <ShortlistDiagram d={d} />,
-        example: (
-          <p>
-            This week's shortlist: <strong>{d.pool.GK}</strong> goalkeepers, <strong>{d.pool.DEF}</strong> defenders, <strong>{d.pool.MID}</strong> midfielders and{" "}
-            <strong>{d.pool.FWD}</strong> forwards.
-          </p>
-        ),
-      };
-    case 2:
-      return {
-        text: (
-          <>
-            <p>A solver (a maths optimiser) picks the best legal 15-player squad it can find.</p>
-            <p>
-              It follows the same rules you did: {d.budget.replace(".0m", "m")}, {d.squadPositions.GK} goalkeepers, {d.squadPositions.DEF} defenders, {d.squadPositions.MID} midfielders,{" "}
-              {d.squadPositions.FWD} forwards, max {d.maxPerClub} per club.
-            </p>
-          </>
-        ),
-        diagram: <OptimiseDiagram d={d} />,
-        example: (
-          <p>
-            FantasyXI's squad cost <strong>{d.squadCost}</strong> of {d.budget}.
-          </p>
-        ),
-      };
-    case 3:
-      return {
-        text: (
-          <>
-            <p>A second optimiser picks the starting 11 with the highest total estimate.</p>
-            <p>For captain, it multiplies each starter's estimate by a position weight: forwards ×1.25, midfielders ×1.2, defenders ×0.85, goalkeepers ×0.5.</p>
-            <p>The highest becomes captain and the second highest vice-captain.</p>
-          </>
-        ),
-        diagram: <XiDiagram d={d} />,
-        example: (
-          <>
-            <p>This week it chose a {d.formation}.</p>
-            <p>
-              Captain: <strong>{d.captain.name}</strong>
-              {d.captain.score !== null && ` (${d.captain.estimate!.toFixed(1)} × ${d.captain.weight} = ${d.captain.score.toFixed(1)})`}. Vice: <strong>{d.vice.name}</strong>
-              {d.vice.score !== null && ` (${d.vice.estimate!.toFixed(1)} × ${d.vice.weight} = ${d.vice.score.toFixed(1)})`}.
-            </p>
-          </>
-        ),
-      };
-    default:
-      return {
-        text: (
-          <>
-            <p>Then the real Gameweek {d.gameweek} results decide the score, for FantasyXI and for you.</p>
-            <p>Both teams use exactly the same scoring rules.</p>
-          </>
-        ),
-        diagram: <PlayDiagram ai={d.aiTotal} human={humanScore} />,
-        example: (
-          <>
-            <p>
-              FantasyXI scored <strong>{d.aiTotal}</strong>: {d.startingPoints} from its starting 11 plus {d.captainBonus} captain bonus ({shortName(d.activeCaptainName, 16)}).
-            </p>
-            {d.autoSubCount > 0 && (
-              <p>
-                {d.autoSubCount} of its starters didn't play, so bench players came on automatically.
-              </p>
-            )}
-            {humanScore !== null && (
-              <p>
-                Your team scored <strong>{humanScore}</strong>.
-              </p>
-            )}
-          </>
-        ),
-      };
-  }
-}
+// ---- Simple line icons (decorative) ----
 
-function EndNotes({ data }: { data: ExplainerData }) {
-  return (
-    <section className="explainer__notes">
-      <p className="explainer__footnote">
-        FantasyXI also has a reinforcement-learning layer (PPO) for season-long strategy. In a single week like this, it kept the optimised squad.
-      </p>
-      <details className="learn-more">
-        <summary>Learn more (for the curious)</summary>
-        <ul>
-          <li>The BiLSTM and tree models were trained on seasons 2016-17 to 2023-24; 2025-26 was kept as the test season.</li>
-          <li>
-            We can't fully prove the estimates used no future information: one input (chance of playing) came from a script we no longer have, and some settings may have been tuned while
-            looking at 2025-26.
-          </li>
-          <li>The final estimate is 65% model and 35% a price-based guess, with a boost of up to 20% for players in good form and a minimum of 6.5 for players costing £9.5m or more.</li>
-          <li>Form only uses earlier gameweeks, never the week being estimated.</li>
-          <li>
-            A flaw we found: because of a data-matching bug in our pipeline, {data.flaggedPlayers} of the {data.totalPlayers} players this week got an estimate meant for a different player from an
-            earlier season.
-          </li>
-          <li>
-            {data.flaggedPicks} of FantasyXI's 15 picks were chosen using one of those estimates. This leaked no 2025-26 results, but those picks weren't based on a real estimate for that player.
-          </li>
-          <li>That's why the examples above only use players with a genuine estimate.</li>
-          <li>PPO asked for a "wildcard" this week, but chips are switched off at the stall, so nothing changed.</li>
-          <li>Auto-subs here don't check the formation, so FantasyXI's goalkeeper was replaced by a defender. The same rule applied to your team.</li>
-        </ul>
-      </details>
-    </section>
-  );
-}
+const Svg = ({ children }: { children: ReactNode }) => (
+  <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" focusable="false">
+    {children}
+  </svg>
+);
 
-// ---- Simple diagrams (CSS/SVG; decorative, hidden from screen readers) -------------------------
+const IconData = () => (
+  <Svg>
+    <ellipse cx="24" cy="11" rx="15" ry="5" />
+    <path d="M9 11v26c0 2.8 6.7 5 15 5s15-2.2 15-5V11" />
+    <path d="M9 24c0 2.8 6.7 5 15 5s15-2.2 15-5" />
+  </Svg>
+);
 
-function PredictDiagram() {
-  return (
-    <div className="dia dia--predict">
-      {/* No gameweek numbers on purpose: which exact weeks the model reads was never verified. */}
-      <div className="dia__gws">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} className="dia__gw dia__gw--blank" style={{ animationDelay: `${i * 50}ms` }} />
-        ))}
-      </div>
-      <span className="dia__caption">Last 5 gameweeks</span>
-      <span className="dia__arrow">↓</span>
-      <span className="dia__box">BiLSTM</span>
-      <span className="dia__arrow">↓</span>
-      <span className="dia__box">Tree models</span>
-      <span className="dia__arrow">↓</span>
-      <span className="dia__box dia__box--accent">Estimate · blended with price & form</span>
-    </div>
-  );
-}
+const IconNetwork = () => (
+  <Svg>
+    <circle cx="10" cy="14" r="4" />
+    <circle cx="10" cy="34" r="4" />
+    <circle cx="24" cy="10" r="4" />
+    <circle cx="24" cy="24" r="4" />
+    <circle cx="24" cy="38" r="4" />
+    <circle cx="38" cy="24" r="4" />
+    <path d="M14 14l6-3M14 15l6 7M14 33l6-7M14 34l6 3M28 11l6 11M28 24h6M28 37l6-11" />
+  </Svg>
+);
 
-function ShortlistDiagram({ d }: { d: ExplainerData }) {
-  return (
-    <div className="dia dia--funnel">
-      <svg viewBox="0 0 200 120" className="dia__svg">
-        <polygon points="10,10 190,10 130,110 70,110" className="dia__funnel" />
-      </svg>
-      <span className="dia__funnel-top">{d.totalPlayers} players</span>
-      <span className="dia__funnel-bottom">{d.poolTotal} shortlisted</span>
-    </div>
-  );
-}
+const IconChart = () => (
+  <Svg>
+    <path d="M6 42h36" />
+    <path d="M12 36V26M21 36V18M30 36V22M39 36V10" strokeWidth="5" />
+  </Svg>
+);
 
-function OptimiseDiagram({ d }: { d: ExplainerData }) {
-  const cost = Number(d.squadCost.replace(/[£m]/g, ""));
-  const budget = Number(d.budget.replace(/[£m]/g, ""));
-  return (
-    <div className="dia dia--optimise">
-      <div className="dia__budget">
-        <span className="dia__budget-fill" style={{ width: `${(cost / budget) * 100}%` }} />
-      </div>
-      <span className="dia__caption">
-        {d.squadCost} / {d.budget}
-      </span>
-      <div className="dia__squad">
-        {POSITIONS.map((p) => (
-          <div key={p} className="dia__squad-row">
-            <span className="dia__pos">{p}</span>
-            {Array.from({ length: d.squadPositions[p] }, (_, i) => (
-              <span key={i} className="dia__chip" />
-            ))}
-          </div>
-        ))}
-      </div>
-      <span className="dia__caption">max {d.maxPerClub} per club</span>
-    </div>
-  );
-}
+const IconGears = () => (
+  <Svg>
+    <circle cx="18" cy="20" r="6" />
+    <path d="M18 8v4M18 28v4M6 20h4M26 20h4M9.5 11.5l2.8 2.8M23.7 25.7l2.8 2.8M9.5 28.5l2.8-2.8M23.7 14.3l2.8-2.8" />
+    <circle cx="34" cy="34" r="4" />
+    <path d="M34 26v3M34 39v3M26 34h3M39 34h3" />
+  </Svg>
+);
 
-function XiDiagram({ d }: { d: ExplainerData }) {
-  const [def, mid, fwd] = d.formation.split("-").map(Number) as [number, number, number];
-  // C and V go on the rows of the real captain's and vice's positions.
-  const marksFor = (pos: string) => [d.captain.position === pos ? "C" : null, d.vice.position === pos ? "V" : null].filter(Boolean) as string[];
-  const row = (n: number, marks: (string | null)[] = []) => (
-    <div className="dia__xi-row">
-      {Array.from({ length: n }, (_, i) => (
-        <span key={i} className={`dia__dot ${marks[i] ? "dia__dot--mark" : ""}`}>
-          {marks[i]}
-        </span>
-      ))}
-    </div>
-  );
-  return (
-    <div className="dia dia--xi">
-      {row(fwd, marksFor("FWD"))}
-      {row(mid, marksFor("MID"))}
-      {row(def, marksFor("DEF"))}
-      {row(1, marksFor("GK"))}
-      <span className="dia__caption">{d.formation}</span>
-    </div>
-  );
-}
-
-function PlayDiagram({ ai, human }: { ai: number; human: number | null }) {
-  return (
-    <div className="dia dia--play">
-      <div className="dia__score">
-        <span className="dia__score-label">You</span>
-        <span className="dia__score-value">{human ?? "–"}</span>
-      </div>
-      <span className="dia__vs">vs</span>
-      <div className="dia__score dia__score--ai">
-        <span className="dia__score-label">FantasyXI</span>
-        <span className="dia__score-value">{ai}</span>
-      </div>
-    </div>
-  );
-}
+const IconShirt = () => (
+  <Svg>
+    <path d="M17 6l-11 7 5 8 4-2v23h18V19l4 2 5-8-11-7c-1 3-4 5-7 5s-6-2-7-5z" />
+  </Svg>
+);
