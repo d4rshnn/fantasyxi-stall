@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type Dispatch } from "react";
+import { useEffect, type Dispatch } from "react";
 import type { EngineContext } from "../engine";
 import type { BuildState } from "../state/build";
 import type { Action } from "../state/machine";
@@ -34,8 +34,6 @@ export function BuilderHeader({ step, build, ctx, dispatch, timerEnabled, timerM
     return () => window.clearTimeout(id);
   }, [build.message, dispatch]);
 
-  const onTimeUp = useCallback((now: number) => dispatch({ type: "TIME_UP", now }), [dispatch]);
-
   return (
     <header className="builder-header">
       <div className="builder-header__top">
@@ -46,7 +44,7 @@ export function BuilderHeader({ step, build, ctx, dispatch, timerEnabled, timerM
             </li>
           ))}
         </ol>
-        {timerEnabled && <Timer endsAt={build.timer.endsAt} onTimeUp={onTimeUp} />}
+        {timerEnabled && <Timer endsAt={build.timer.endsAt} />}
       </div>
       <BudgetBar lineup={build.lineup} ctx={ctx} step={step} />
       <div className="message-slot" aria-live="polite">

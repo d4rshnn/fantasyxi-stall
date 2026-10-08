@@ -94,6 +94,20 @@
   color: var(--color-warning);
 }
 
+/* Overtime: calm, not alarming (no red, no flashing). Nothing happens automatically at 0:00. */
+.timer--overtime {
+  align-items: center;
+  border-color: var(--color-accent);
+  white-space: normal;
+}
+
+.timer--overtime .timer__label {
+  max-width: 13rem;
+  color: var(--color-text);
+  text-transform: none;
+  line-height: 1.2;
+}
+
 /* ---- Budget ---- */
 .budget {
   display: flex;

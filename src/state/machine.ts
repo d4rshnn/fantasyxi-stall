@@ -25,9 +25,6 @@ export type FlowScreen = (typeof FLOW)[number];
 /** Admin is hidden: reached only via #/admin or Ctrl+Shift+A, never via "Next". */
 export type Screen = FlowScreen | "admin";
 
-/** Screens where the soft countdown runs. */
-export const TIMED_SCREENS: readonly Screen[] = ["build", "bench", "captain"];
-
 /** Screens that change the team; unreachable once the team is locked. */
 export const EDIT_SCREENS: readonly Screen[] = ["name", "build", "bench", "captain", "lock"];
 
@@ -246,7 +243,7 @@ export function reducer(state: AppState, action: Action): AppState {
       // Team-building actions.
       const ctx = ctxOf(state);
       if (!ctx || !state.build) return state;
-      if ((action.type === "TIMER_START" || action.type === "TIME_UP") && !state.settings.timerEnabled) return state;
+      if (action.type === "TIMER_START" && !state.settings.timerEnabled) return state;
       const build = buildReducer(state.build, action, ctx);
       if (build === state.build) return state;
       // Locking (by the Lock button or when time runs out) moves on to meeting FantasyXI.

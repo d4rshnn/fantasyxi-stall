@@ -1,35 +1,28 @@
-import { useEffect, useRef, useState } from "react";
-import { TIMER_WARNING_MS } from "../state/build";
+import { useEffect, useState } from "react";
+import { timerView } from "../state/build";
 
-/** Soft countdown. Calls onTimeUp(now) once when it reaches 0. Shows nothing if not running. */
-export function Timer({ endsAt, onTimeUp }: { endsAt: number | null; onTimeUp: (now: number) => void }) {
+/** Display-only countdown. Reaching 0 does nothing by itself: it switches to a calm, up-counting
+ *  overtime clock ("Time's up · take your time to finish  +0:23"). Shows nothing if not running. */
+export function Timer({ endsAt }: { endsAt: number | null }) {
   const [now, setNow] = useState(() => Date.now());
-  const fired = useRef<number | null>(null);
 
   useEffect(() => {
     if (endsAt === null) return;
-    const tick = () => {
-      const t = Date.now();
-      setNow(t);
-      if (t >= endsAt && fired.current !== endsAt) {
-        fired.current = endsAt;
-        onTimeUp(t);
-      }
-    };
-    tick();
-    const id = window.setInterval(tick, 250);
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(id);
-  }, [endsAt, onTimeUp]);
+  }, [endsAt]);
 
   if (endsAt === null) return null;
-  const left = Math.max(0, endsAt - now);
-  const secs = Math.ceil(left / 1000);
-  const label = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
-  const warning = left <= TIMER_WARNING_MS;
+  const v = timerView(endsAt, now);
+  const label = v.mode === "overtime" ? "Time's up · take your time to finish" : v.mode === "warning" ? "Hurry!" : "Time";
   return (
-    <div className={`timer ${warning ? "timer--warning" : ""}`} role="timer" aria-live={warning ? "polite" : "off"}>
-      <span className="timer__label">{warning ? "Hurry!" : "Time"}</span>
-      <span className="timer__value">{label}</span>
+    // Announce only the change of mode (aria-live off for the ticking value).
+    <div className={`timer timer--${v.mode}`} role="timer" aria-live="off">
+      <span className="timer__label" aria-live="polite">
+        {label}
+      </span>
+      <span className="timer__value">{v.value}</span>
     </div>
   );
 }

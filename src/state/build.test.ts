@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { autoComplete, budgetStatus, lineupToTeam, validateTeam, type EngineContext } from "../engine";
+import { budgetStatus, lineupToTeam, validateTeam, type EngineContext } from "../engine";
 import { realGameweek, rng, shuffle } from "../engine/testing/fixtures";
-import { buildReducer, newBuild, reshapeLineup, TIMER_EXTENSION_MS, TIMER_MS, type BuildAction, type BuildState } from "./build";
+import { buildReducer, newBuild, reshapeLineup, type BuildAction, type BuildState } from "./build";
 import { reducer, initialState, type AppState } from "./machine";
 import { manifest } from "../engine/testing/fixtures";
 
@@ -167,45 +167,11 @@ describe("lock", () => {
   });
 });
 
-describe("timer", () => {
-  const T0 = 1_000_000;
+describe("lock", () => {
   const valid = () =>
     run(aiBuild(), { type: "SET_CAPTAIN", playerId: reveal.ai.captain_id }, { type: "SET_VICE", playerId: reveal.ai.vice_captain_id });
 
-  it("starts once at 3 minutes; time up before the end does nothing", () => {
-    const s = run(newBuild(ctx), { type: "TIMER_START", now: T0 });
-    expect(s.timer.endsAt).toBe(T0 + TIMER_MS);
-    expect(run(s, { type: "TIMER_START", now: T0 + 5000 }).timer.endsAt).toBe(T0 + TIMER_MS);
-    expect(run(s, { type: "TIME_UP", now: T0 + 1000 })).toBe(s);
-  });
-
-  it("a valid team locks automatically at 0", () => {
-    const s = run(valid(), { type: "TIMER_START", now: T0 }, { type: "TIME_UP", now: T0 + TIMER_MS });
-    expect(s.lockedTeam).not.toBeNull();
-    expect(validateTeam(s.lockedTeam!, ctx)).toEqual([]);
-  });
-
-  it("an incomplete team gets the dialog: +60 s once, then complete-only", () => {
-    let s = run(xiOnly(), { type: "TIMER_START", now: T0 }, { type: "TIME_UP", now: T0 + TIMER_MS });
-    expect(s.lockedTeam).toBeNull();
-    expect(s.timer.dialog).toBe("extend-or-complete");
-    s = run(s, { type: "TIMER_EXTEND", now: T0 + TIMER_MS + 2000 });
-    expect(s.timer).toEqual({ endsAt: T0 + TIMER_MS + 2000 + TIMER_EXTENSION_MS, extended: true, dialog: null });
-    s = run(s, { type: "TIME_UP", now: s.timer.endsAt! });
-    expect(s.timer.dialog).toBe("complete-only");
-    expect(run(s, { type: "TIMER_EXTEND", now: 0 })).toBe(s); // no second extension
-  });
-
-  it("auto-complete gives a legal, locked team that matches the engine's autoComplete", () => {
-    const start = xiOnly();
-    const s = run(start, { type: "TIMER_START", now: T0 }, { type: "TIME_UP", now: T0 + TIMER_MS }, { type: "TIMER_AUTOCOMPLETE" });
-    expect(s.lockedTeam).not.toBeNull();
-    expect(validateTeam(s.lockedTeam!, ctx)).toEqual([]);
-    const engine = autoComplete(start.lineup, null, null, ctx);
-    expect(engine.ok && engine.team).toEqual(s.lockedTeam);
-  });
-
-  it("in the app, locking (button or time up) moves on to Meet FantasyXI", () => {
+  it("in the app, locking moves on to Meet FantasyXI", () => {
     const m = manifest();
     let app: AppState = reducer(initialState, { type: "DATA_LOADED", data: { manifest: m, gameweek: m.gameweeks[0]!, pregame: realGameweek(37).pregame } });
     app = { ...reducer(app, { type: "GOTO", screen: "captain" }), build: valid() };

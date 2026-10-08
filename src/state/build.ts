@@ -1,9 +1,8 @@
 // State for building one group's team (Build, Bench, Captain steps + the timer).
-// Every rule decision is delegated to the engine (canAddPlayer, autoFillBench, autoComplete,
-// validateTeam). This file only stores choices, keeps an undo history, and runs the timer logic.
+// Every rule decision is delegated to the engine (canAddPlayer, autoFillBench, validateTeam). This
+// file only stores choices, keeps an undo history, and holds the (display-only) timer.
 
 import {
-  autoComplete,
   autoFillBench,
   canAddPlayer,
   emptyLineup,
@@ -20,7 +19,6 @@ import { randomCaptainVice, randomFillXI, seededRng } from "./randomTeam";
 export const DEFAULT_FORMATION = "4-4-2";
 export const TIMER_MS = 3 * 60_000;
 export const TIMER_WARNING_MS = 30_000;
-export const TIMER_EXTENSION_MS = 60_000;
 
 export interface Snapshot {
   lineup: Lineup;
@@ -28,13 +26,26 @@ export interface Snapshot {
   viceCaptainId: number | null;
 }
 
+/** Display-only countdown: reaching 0 changes nothing (no auto-lock, no auto-complete, no dialog);
+ *  the clock just switches to a calm up-counting overtime. */
 export interface TimerState {
-  /** When the countdown hits 0 (ms since epoch); null = not running. */
+  /** When the countdown hits 0 (ms since epoch); null = not running (not started, off, or locked). */
   endsAt: number | null;
-  /** The one-off +60 s has been used. */
-  extended: boolean;
-  /** Time-up dialog: offer +60 s (first time) or only auto-complete (after the extension). */
-  dialog: null | "extend-or-complete" | "complete-only";
+}
+
+export interface TimerView {
+  mode: "normal" | "warning" | "overtime";
+  /** "2:59" counting down, or "+0:23" counting up in overtime. */
+  value: string;
+}
+
+const clock = (secs: number) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+
+/** What the timer shows at `now`. Pure, so it can be tested without a clock. */
+export function timerView(endsAt: number, now: number): TimerView {
+  const left = endsAt - now;
+  if (left <= 0) return { mode: "overtime", value: `+${clock(Math.floor(-left / 1000))}` };
+  return { mode: left <= TIMER_WARNING_MS ? "warning" : "normal", value: clock(Math.ceil(left / 1000)) };
 }
 
 export interface BuildState extends Snapshot {
@@ -61,9 +72,6 @@ export type BuildAction =
   | { type: "LOCK" }
   | { type: "DISMISS_MESSAGE" }
   | { type: "TIMER_START"; now: number; durationMs?: number }
-  | { type: "TIME_UP"; now: number }
-  | { type: "TIMER_EXTEND"; now: number }
-  | { type: "TIMER_AUTOCOMPLETE" }
   | { type: "TIMER_STOP" };
 
 const MAX_UNDO = 50;
@@ -76,7 +84,7 @@ export function newBuild(ctx: EngineContext): BuildState {
     undo: [],
     message: null,
     lockedTeam: null,
-    timer: { endsAt: null, extended: false, dialog: null },
+    timer: { endsAt: null },
   };
 }
 
@@ -126,7 +134,7 @@ export function finishedTeam(s: BuildState, ctx: EngineContext): { team: Team | 
 }
 
 function lock(s: BuildState, team: Team): BuildState {
-  return { ...s, lockedTeam: team, message: null, timer: { ...s.timer, endsAt: null, dialog: null } };
+  return { ...s, lockedTeam: team, message: null, timer: { endsAt: null } };
 }
 
 export function buildReducer(s: BuildState, a: BuildAction, ctx: EngineContext): BuildState {
@@ -201,27 +209,12 @@ export function buildReducer(s: BuildState, a: BuildAction, ctx: EngineContext):
       return s.message === null ? s : { ...s, message: null };
 
     // ---- Timer -----------------------------------------------------------------------
+    // Display only: there is no "time up" action. Nothing changes by itself when the clock hits 0.
     case "TIMER_START":
-      if (s.timer.endsAt !== null || s.timer.dialog !== null || s.timer.extended) return s;
-      return { ...s, timer: { ...s.timer, endsAt: a.now + (a.durationMs ?? TIMER_MS) } };
-    case "TIME_UP": {
-      if (s.timer.endsAt === null || a.now < s.timer.endsAt) return s;
-      const { team } = finishedTeam(s, ctx);
-      if (team) return lock(s, team); // a valid team locks automatically
-      return { ...s, timer: { ...s.timer, endsAt: null, dialog: s.timer.extended ? "complete-only" : "extend-or-complete" } };
-    }
-    case "TIMER_EXTEND":
-      if (s.timer.dialog !== "extend-or-complete") return s;
-      return { ...s, timer: { endsAt: a.now + TIMER_EXTENSION_MS, extended: true, dialog: null } };
-    case "TIMER_AUTOCOMPLETE": {
-      if (s.timer.dialog === null) return s;
-      const res = autoComplete(s.lineup, s.captainId, s.viceCaptainId, ctx);
-      if (!res.ok) return { ...s, message: res.reason, timer: { ...s.timer, dialog: null } };
-      const done = commit(s, { lineup: res.lineup, captainId: res.captainId, viceCaptainId: res.viceCaptainId });
-      return lock(done, res.team);
-    }
+      if (s.timer.endsAt !== null) return s; // already running (or in overtime)
+      return { ...s, timer: { endsAt: a.now + (a.durationMs ?? TIMER_MS) } };
     case "TIMER_STOP":
-      return { ...s, timer: { ...s.timer, endsAt: null, dialog: null } };
+      return s.timer.endsAt === null ? s : { ...s, timer: { endsAt: null } };
   }
 }
 

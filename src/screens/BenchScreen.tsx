@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BENCH_AUTOFILL_RULE_TEXT } from "../engine";
 import { BuilderHeader } from "../components/BuilderHeader";
 import { SlotButton } from "../components/Pitch";
@@ -8,11 +8,6 @@ import type { BuildScreenProps } from "./BuildScreen";
 
 export function BenchScreen({ build, ctx, dispatch, timerEnabled, timerMs }: BuildScreenProps) {
   const [picker, setPicker] = useState<number | null>(null);
-  // When time runs out, close the player list so only the time-up dialog is open.
-  const timeUp = build.timer.dialog !== null;
-  useEffect(() => {
-    if (timeUp) setPicker(null);
-  }, [timeUp]);
   const [showRule, setShowRule] = useState(false);
   const { lineup } = build;
   const benchSlots = lineup.slots.flatMap((s, i) => (s.kind === "bench" ? [i] : []));

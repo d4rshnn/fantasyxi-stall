@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useReducer, useState, type Dispatch } from "react";
 import { DevScreenStrip } from "./components/DevScreenStrip";
-import { TimeUpDialog } from "./components/TimeUpDialog";
 import { DataLoadError, loadInitialData } from "./data/loader";
-import { initialState, reducer, TIMED_SCREENS, type Action, type AppState, type FlowScreen } from "./state/machine";
+import { initialState, reducer, type Action, type AppState, type FlowScreen } from "./state/machine";
 import { loadSettings, saveSettings } from "./state/settings";
 import { AdminScreen } from "./screens/AdminScreen";
 import { AttractScreen } from "./screens/AttractScreen";
@@ -193,8 +192,6 @@ export function App() {
     return () => window.clearTimeout(id);
   }, [state.screen]);
 
-  const showTimeUp = state.screen !== "admin" && TIMED_SCREENS.includes(state.screen) && state.build?.timer.dialog;
-
   return (
     <div className="app">
       {import.meta.env.DEV && (
@@ -224,7 +221,6 @@ export function App() {
       ) : (
         renderMain(state, dispatch, () => setLoadAttempt((n) => n + 1), timerMs)
       )}
-      {showTimeUp && state.build && <TimeUpDialog build={state.build} dispatch={dispatch} />}
       </ErrorBoundary>
       {navGuard && <div className="nav-guard" aria-hidden="true" />}
       <IdleReset active={state.data.status === "ready" && IDLE_SCREENS.includes(state.screen)} onReset={resetToStart} />

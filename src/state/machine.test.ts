@@ -67,6 +67,5 @@ describe("screen state machine", () => {
     state = reducer(state, { type: "SET_TIMER_ENABLED", enabled: false });
     expect(state.build!.timer.endsAt).toBeNull();
     expect(reducer(state, { type: "TIMER_START", now: 2000 })).toBe(state);
-    expect(reducer(state, { type: "TIME_UP", now: 999_999 })).toBe(state);
   });
 });
